@@ -4,9 +4,11 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Zap, RefreshCw, WifiOff, Wifi, Signal, Activity } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
 
-// Simulated network speed data
-const networkData = [
+// Initial network data
+const initialNetworkData = [
   { time: '00:00', download: 35, upload: 10 },
   { time: '04:00', download: 28, upload: 8 },
   { time: '08:00', download: 52, upload: 15 },
@@ -17,13 +19,91 @@ const networkData = [
 ];
 
 export const PulseBoost = () => {
-  // Simulated network metrics
-  const downloadSpeed = 85;
-  const uploadSpeed = 22;
-  const ping = 18;
-  const stability = 95;
-  const devices = 8;
-  const activeOptimizations = 3;
+  // State for network metrics
+  const [downloadSpeed, setDownloadSpeed] = useState(85);
+  const [uploadSpeed, setUploadSpeed] = useState(22);
+  const [ping, setPing] = useState(18);
+  const [stability, setStability] = useState(95);
+  const [devices, setDevices] = useState(8);
+  const [activeOptimizations, setActiveOptimizations] = useState(3);
+  const [networkData, setNetworkData] = useState(initialNetworkData);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const { toast } = useToast();
+
+  // Simulated network fluctuation - generates realistic random changes to network metrics
+  const updateNetworkMetrics = () => {
+    // Random fluctuation within reasonable bounds
+    setDownloadSpeed(prev => Math.max(20, Math.min(110, prev + (Math.random() - 0.5) * 20)));
+    setUploadSpeed(prev => Math.max(5, Math.min(35, prev + (Math.random() - 0.5) * 8)));
+    setPing(prev => Math.max(8, Math.min(40, prev + (Math.random() - 0.5) * 6)));
+    setStability(prev => Math.max(80, Math.min(99, prev + (Math.random() - 0.5) * 5)));
+    
+    // Occasionally change device count (less frequently)
+    if (Math.random() > 0.8) {
+      const newDevices = Math.max(1, Math.min(12, devices + (Math.random() > 0.5 ? 1 : -1)));
+      if (newDevices !== devices) {
+        setDevices(newDevices);
+        const action = newDevices > devices ? "connected to" : "disconnected from";
+        toast({
+          title: `Device ${action} network`,
+          description: `${newDevices} devices now connected`,
+        });
+      }
+    }
+    
+    // Occasionally change optimization count (rarely)
+    if (Math.random() > 0.9) {
+      const newOptimizations = Math.max(0, Math.min(5, activeOptimizations + (Math.random() > 0.6 ? 1 : -1)));
+      if (newOptimizations !== activeOptimizations) {
+        setActiveOptimizations(newOptimizations);
+        const action = newOptimizations > activeOptimizations ? "enabled" : "disabled";
+        toast({
+          title: `Network optimization ${action}`,
+          description: newOptimizations > activeOptimizations 
+            ? "Network performance should improve"
+            : "This may affect network performance",
+          variant: newOptimizations > activeOptimizations ? "default" : "destructive",
+        });
+      }
+    }
+    
+    // Update chart data - slide window and add new point
+    const now = new Date();
+    const timeString = now.getHours().toString().padStart(2, '0') + ':' + 
+                      now.getMinutes().toString().padStart(2, '0');
+                      
+    setNetworkData(prev => {
+      const newData = [...prev.slice(1), {
+        time: timeString,
+        download: downloadSpeed,
+        upload: uploadSpeed
+      }];
+      return newData;
+    });
+  };
+
+  // Manual refresh handler
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    // Simulate network refresh with a slight delay
+    setTimeout(() => {
+      updateNetworkMetrics();
+      setIsRefreshing(false);
+      toast({
+        title: "Network stats refreshed",
+        description: `Download: ${downloadSpeed.toFixed(1)} Mbps, Upload: ${uploadSpeed.toFixed(1)} Mbps`,
+      });
+    }, 800);
+  };
+
+  // Periodic auto-refresh effect
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      updateNetworkMetrics();
+    }, 10000); // Update every 10 seconds
+    
+    return () => clearInterval(intervalId);
+  }, [devices, activeOptimizations]);
   
   return (
     <div className="space-y-6">
@@ -33,11 +113,17 @@ export const PulseBoost = () => {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-2xl font-bold">Network Performance</CardTitle>
-                <CardDescription>24-hour monitoring</CardDescription>
+                <CardDescription>Live monitoring</CardDescription>
               </div>
-              <Button variant="outline" size="sm" className="gap-2">
-                <RefreshCw size={16} />
-                Refresh
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="gap-2" 
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+              >
+                <RefreshCw size={16} className={isRefreshing ? "animate-spin" : ""} />
+                {isRefreshing ? "Refreshing..." : "Refresh"}
               </Button>
             </div>
           </CardHeader>
@@ -53,14 +139,16 @@ export const PulseBoost = () => {
                   dataKey="download" 
                   name="Download (Mbps)"
                   stroke="#00a5cf" 
-                  strokeWidth={2} 
+                  strokeWidth={2}
+                  animationDuration={500}
                 />
                 <Line 
                   type="monotone" 
                   dataKey="upload" 
                   name="Upload (Mbps)"
                   stroke="#0c3b5c" 
-                  strokeWidth={2} 
+                  strokeWidth={2}
+                  animationDuration={500}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -79,9 +167,9 @@ export const PulseBoost = () => {
                     <Wifi className="text-shield-accent" size={18} />
                     <span className="font-medium">Download</span>
                   </div>
-                  <span className="font-bold">{downloadSpeed} Mbps</span>
+                  <span className="font-bold transition-all duration-500">{downloadSpeed.toFixed(1)} Mbps</span>
                 </div>
-                <Progress value={downloadSpeed} max={100} className="h-2" />
+                <Progress value={downloadSpeed} max={100} className="h-2 transition-all duration-500" />
               </div>
               
               <div className="space-y-2">
@@ -90,19 +178,19 @@ export const PulseBoost = () => {
                     <WifiOff className="text-shield" size={18} />
                     <span className="font-medium">Upload</span>
                   </div>
-                  <span className="font-bold">{uploadSpeed} Mbps</span>
+                  <span className="font-bold transition-all duration-500">{uploadSpeed.toFixed(1)} Mbps</span>
                 </div>
-                <Progress value={uploadSpeed * 3} max={100} className="h-2" />
+                <Progress value={uploadSpeed * 3} max={100} className="h-2 transition-all duration-500" />
               </div>
               
               <div className="pt-2 space-y-2">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Ping</span>
-                  <span className="font-medium">{ping} ms</span>
+                  <span className="font-medium transition-all duration-300">{ping.toFixed(0)} ms</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Stability</span>
-                  <span className="font-medium">{stability}%</span>
+                  <span className="font-medium transition-all duration-300">{stability.toFixed(1)}%</span>
                 </div>
               </div>
             </CardContent>
@@ -117,7 +205,7 @@ export const PulseBoost = () => {
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-shield-accent/20 flex items-center justify-center text-shield-accent">
-                    <Zap size={20} />
+                    <Zap size={20} className={activeOptimizations > 0 ? "animate-pulse" : ""} />
                   </div>
                   <div>
                     <p className="font-medium">Boost Status</p>
@@ -135,7 +223,7 @@ export const PulseBoost = () => {
                     <Activity size={16} className="text-shield" />
                     <span className="text-sm">Optimizations Active</span>
                   </div>
-                  <span className="font-medium">{activeOptimizations}</span>
+                  <span className="font-medium transition-all duration-300">{activeOptimizations}</span>
                 </div>
                 
                 <div className="flex justify-between items-center">
@@ -143,7 +231,7 @@ export const PulseBoost = () => {
                     <Signal size={16} className="text-shield" />
                     <span className="text-sm">Connected Devices</span>
                   </div>
-                  <span className="font-medium">{devices}</span>
+                  <span className="font-medium transition-all duration-300">{devices}</span>
                 </div>
               </div>
             </CardContent>
