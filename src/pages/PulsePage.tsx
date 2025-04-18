@@ -1,13 +1,13 @@
 
-import { GuardianShield } from "@/components/GuardianShield";
+import { PulseBoost } from "@/components/PulseBoost";
 import { DashboardLayout } from "@/components/DashboardLayout";
 
-const Index = () => {
+const PulsePage = () => {
   return (
     <DashboardLayout>
-      <GuardianShield />
+      <PulseBoost />
     </DashboardLayout>
   );
 };
 
-export default Index;
+export default PulsePage;

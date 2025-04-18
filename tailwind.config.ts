@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -24,6 +25,20 @@ export default {
 				ring: 'hsl(var(--ring))',
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
+				shield: {
+					DEFAULT: '#0c3b5c',
+					foreground: '#e6f1ff',
+					accent: '#00a5cf',
+					secondary: '#1d566e',
+					muted: '#194b61',
+					highlight: '#00bfff'
+				},
+				status: {
+					safe: '#10b981',
+					warning: '#f59e0b',
+					danger: '#ef4444',
+					inactive: '#6b7280'
+				},
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
 					foreground: 'hsl(var(--primary-foreground))'
@@ -70,25 +85,42 @@ export default {
 			},
 			keyframes: {
 				'accordion-down': {
-					from: {
-						height: '0'
-					},
-					to: {
-						height: 'var(--radix-accordion-content-height)'
-					}
+					from: { height: '0' },
+					to: { height: 'var(--radix-accordion-content-height)' }
 				},
 				'accordion-up': {
-					from: {
-						height: 'var(--radix-accordion-content-height)'
-					},
-					to: {
-						height: '0'
-					}
+					from: { height: 'var(--radix-accordion-content-height)' },
+					to: { height: '0' }
+				},
+				'pulse-ring': {
+					'0%': { transform: 'scale(0.8)', opacity: '0.8' },
+					'100%': { transform: 'scale(1.5)', opacity: '0' }
+				},
+				'pulse-dot': {
+					'0%': { transform: 'scale(0.8)' },
+					'50%': { transform: 'scale(1)' },
+					'100%': { transform: 'scale(0.8)' }
+				},
+				'fade-in': {
+					'0%': { opacity: '0' },
+					'100%': { opacity: '1' }
+				},
+				'rotate-center': {
+					'0%': { transform: 'rotate(0)' },
+					'100%': { transform: 'rotate(360deg)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'pulse-ring': 'pulse-ring 2s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite',
+				'pulse-dot': 'pulse-dot 2s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite',
+				'fade-in': 'fade-in 0.5s ease-in-out',
+				'rotate-center': 'rotate-center 8s linear infinite'
+			},
+			backgroundImage: {
+				'radial-gradient': 'radial-gradient(circle, var(--shield-accent) 0%, var(--shield) 100%)',
+				'shield-gradient': 'linear-gradient(to right, #0c3b5c, #1d566e)'
 			}
 		}
 	},
