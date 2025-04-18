@@ -17,13 +17,13 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       <DashboardSidebar />
       
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="bg-white dark:bg-card h-16 border-b border-border flex items-center justify-between px-6">
+        <header className="bg-white dark:bg-card h-16 border-b border-border flex items-center justify-between px-6 shadow-sm">
           <div className="flex items-center space-x-4 w-1/3">
             <div className="relative w-full max-w-md">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
               <Input 
                 placeholder="Search..." 
-                className="pl-10 rounded-full bg-gray-100 dark:bg-muted border-none"
+                className="pl-10 rounded-full bg-gray-100 dark:bg-muted border-none focus-visible:ring-offset-0"
               />
             </div>
           </div>
@@ -74,7 +74,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           </div>
         </header>
         
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto p-6">
           {children}
         </main>
       </div>
