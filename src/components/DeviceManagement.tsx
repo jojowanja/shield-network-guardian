@@ -25,8 +25,22 @@ import {
   WifiOff, Clock, ArrowDownToLine, ArrowUpFromLine, Ban
 } from "lucide-react";
 
+// Define a proper Device interface to fix the circular reference
+interface Device {
+  id: string;
+  name: string;
+  type: string;
+  ip: string;
+  mac: string;
+  status: string;
+  connected: string;
+  download: number;
+  upload: number;
+  priority: string;
+}
+
 // Simulated device data
-const devices = [
+const devices: Device[] = [
   {
     id: "dev-001",
     name: "John's MacBook Pro",
@@ -130,7 +144,7 @@ export const DeviceManagement = () => {
     }
     acc[type].push(device);
     return acc;
-  }, {} as Record<string, typeof devices>);
+  }, {} as Record<string, Device[]>);
   
   const deviceTypes = Object.keys(devicesByType);
   
@@ -274,8 +288,8 @@ export const DeviceManagement = () => {
   );
 };
 
-// Device table component
-const DeviceTable = ({ devices }: { devices: typeof devices }) => {
+// Device table component with explicit typing
+const DeviceTable = ({ devices }: { devices: Device[] }) => {
   return (
     <div className="border rounded-lg">
       <Table>
