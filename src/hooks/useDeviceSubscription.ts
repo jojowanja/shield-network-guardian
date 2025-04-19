@@ -40,14 +40,23 @@ export const useDeviceSubscription = () => {
           if (operation === 'INSERT') {
             toast({
               title: 'New device detected',
-              description: `${device.name} has connected to your network`,
+              description: `${device.name} (${device.type}) has connected to your network`,
+              variant: 'default',
             });
-          } else if (operation === 'UPDATE' && device.status === 'offline') {
-            toast({
-              title: 'Device disconnected',
-              description: `${device.name} is now offline`,
-              variant: 'destructive',
-            });
+          } else if (operation === 'UPDATE') {
+            if (device.status === 'offline') {
+              toast({
+                title: 'Device disconnected',
+                description: `${device.name} is now offline`,
+                variant: 'destructive',
+              });
+            } else if (payload.old && payload.old.status === 'offline' && device.status === 'online') {
+              toast({
+                title: 'Device reconnected',
+                description: `${device.name} is back online`,
+                variant: 'default',
+              });
+            }
           }
         }
       )
@@ -58,4 +67,3 @@ export const useDeviceSubscription = () => {
     };
   }, [queryClient, toast]);
 };
-

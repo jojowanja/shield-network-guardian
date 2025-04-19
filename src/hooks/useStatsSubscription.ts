@@ -34,11 +34,24 @@ export const useStatsSubscription = () => {
           queryClient.invalidateQueries({ queryKey: ['networkStats'] });
 
           const stats = payload.new as NetworkStats;
-          // Alert user if network performance degrades
-          if (stats.stability < 80 || stats.downloadSpeed < 50) {
+          
+          // Enhanced toast notifications with more detailed information
+          if (stats.stability < 80) {
             toast({
-              title: 'Network Performance Alert',
-              description: 'Your network performance has degraded',
+              title: 'Network Stability Alert',
+              description: `Network stability has dropped to ${stats.stability.toFixed(1)}%`,
+              variant: 'destructive',
+            });
+          } else if (stats.downloadSpeed < 50) {
+            toast({
+              title: 'Network Speed Alert',
+              description: `Download speed has dropped to ${stats.downloadSpeed.toFixed(1)} Mbps`,
+              variant: 'destructive',
+            });
+          } else if (stats.ping > 100) {
+            toast({
+              title: 'High Latency Alert',
+              description: `Network latency has increased to ${stats.ping.toFixed(0)}ms`,
               variant: 'destructive',
             });
           }
@@ -51,4 +64,3 @@ export const useStatsSubscription = () => {
     };
   }, [queryClient, toast]);
 };
-
