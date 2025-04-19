@@ -1,11 +1,11 @@
 
-import { DeviceManagement } from "@/components/DeviceManagement";
+import { ConnectedDeviceList } from "@/components/ConnectedDeviceList";
 import { DashboardLayout } from "@/components/DashboardLayout";
 
 const DevicesPage = () => {
   return (
     <DashboardLayout>
-      <DeviceManagement />
+      <ConnectedDeviceList />
     </DashboardLayout>
   );
 };

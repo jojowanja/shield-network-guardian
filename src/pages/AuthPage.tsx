@@ -1,11 +1,11 @@
 
-import { AuthorizationRequests } from "@/components/AuthorizationRequests";
+import { AuthForm } from "@/components/AuthForm";
 import { DashboardLayout } from "@/components/DashboardLayout";
 
 const AuthPage = () => {
   return (
     <DashboardLayout>
-      <AuthorizationRequests />
+      <AuthForm />
     </DashboardLayout>
   );
 };

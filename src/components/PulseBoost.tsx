@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ export const PulseBoost = () => {
   const { stats, updateStats } = useNetworkStats();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [networkData, setNetworkData] = useState([]);
+  const { toast } = useToast();
 
   useEffect(() => {
     const now = new Date();
