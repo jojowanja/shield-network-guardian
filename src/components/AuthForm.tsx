@@ -6,8 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { User, LogIn, UserPlus, Shield } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { createClient } from "@supabase/supabase-js";
 
 type AuthMode = "login" | "register";
+
+// Initialize Supabase client
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 export const AuthForm = () => {
   const [mode, setMode] = useState<AuthMode>("login");
@@ -16,45 +23,89 @@ export const AuthForm = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
     try {
-      // Simulate backend authentication
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
+      // Password validation
       if (mode === "register" && password !== confirmPassword) {
         toast({
           title: "Passwords don't match",
           description: "Please make sure your passwords match",
           variant: "destructive",
         });
+        setIsLoading(false);
         return;
       }
       
-      // Password strength check simulation
+      // Password strength check
       if (password.length < 8) {
         toast({
           title: "Weak password",
           description: "Your password should be at least 8 characters long",
           variant: "destructive",
         });
+        setIsLoading(false);
         return;
       }
       
-      toast({
-        title: mode === "login" ? "Logged in successfully" : "Registration successful",
-        description: mode === "login" ? "Welcome back!" : "Your account has been created",
-      });
-      
-      // Here you would normally redirect the user or update app state
+      if (mode === "login") {
+        // Handle login with Supabase
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+        
+        if (error) throw error;
+        
+        toast({
+          title: "Logged in successfully",
+          description: "Welcome back!"
+        });
+        
+        // Save user session to local storage for persistence
+        localStorage.setItem("user", JSON.stringify(data.user));
+        
+        // Redirect to dashboard
+        navigate("/overview");
+      } else {
+        // Handle registration with Supabase
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: window.location.origin + "/auth"
+          }
+        });
+        
+        if (error) throw error;
+        
+        toast({
+          title: "Registration successful",
+          description: data.user ? "Account created successfully!" : "Please check your email to verify your account"
+        });
+        
+        if (data.user && !data.session) {
+          // If email confirmation is required
+          toast({
+            title: "Email verification required",
+            description: "Please check your inbox to verify your email address"
+          });
+        } else if (data.session) {
+          // If auto-confirmation is enabled
+          localStorage.setItem("user", JSON.stringify(data.user));
+          navigate("/overview");
+        }
+      }
       
     } catch (error) {
+      console.error("Authentication error:", error);
       toast({
         title: "Authentication failed",
-        description: "Please check your credentials and try again",
+        description: error instanceof Error ? error.message : "Please check your credentials and try again",
         variant: "destructive",
       });
     } finally {
