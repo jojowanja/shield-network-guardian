@@ -11,10 +11,20 @@ import { createClient } from "@supabase/supabase-js";
 
 type AuthMode = "login" | "register";
 
-// Initialize Supabase client
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Initialize Supabase client with fallback values for development
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-supabase-project-url.supabase.co';
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-public-anon-key';
+
+// Create client only if we have valid URL and key
+const supabaseClient = () => {
+  if (!supabaseUrl || supabaseUrl === 'https://your-supabase-project-url.supabase.co') {
+    console.warn('Supabase URL is not configured. Using demo mode.');
+    return null;
+  }
+  return createClient(supabaseUrl, supabaseKey);
+};
+
+const supabase = supabaseClient();
 
 export const AuthForm = () => {
   const [mode, setMode] = useState<AuthMode>("login");
@@ -25,11 +35,35 @@ export const AuthForm = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   
+  const handleDemoLogin = () => {
+    // If Supabase is not configured, use demo mode
+    if (!supabase) {
+      toast({
+        title: "Demo mode activated",
+        description: "Logging in with a demo account"
+      });
+      
+      // Save demo user to localStorage for persistence
+      localStorage.setItem("demo_mode", "true");
+      
+      // Redirect to dashboard
+      navigate("/overview");
+      return true;
+    }
+    return false;
+  };
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
     try {
+      // Try demo mode first
+      if (handleDemoLogin()) {
+        setIsLoading(false);
+        return;
+      }
+      
       // Password validation
       if (mode === "register" && password !== confirmPassword) {
         toast({
@@ -54,7 +88,7 @@ export const AuthForm = () => {
       
       if (mode === "login") {
         // Handle login with Supabase
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase!.auth.signInWithPassword({
           email,
           password
         });
@@ -73,7 +107,7 @@ export const AuthForm = () => {
         navigate("/overview");
       } else {
         // Handle registration with Supabase
-        const { data, error } = await supabase.auth.signUp({
+        const { data, error } = await supabase!.auth.signUp({
           email,
           password,
           options: {
@@ -188,6 +222,17 @@ export const AuthForm = () => {
                 </span>
               )}
             </Button>
+            
+            {!supabase && (
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="w-full mt-2"
+                onClick={() => handleDemoLogin()}
+              >
+                Continue in Demo Mode
+              </Button>
+            )}
           </form>
         </CardContent>
         <CardFooter className="flex flex-col space-y-2">

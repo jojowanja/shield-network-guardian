@@ -3,10 +3,39 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 import { createClient, Session, User } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
 
-// Initialize Supabase client
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Initialize Supabase client with fallback values for development
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-supabase-project-url.supabase.co';
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-public-anon-key';
+
+// Create client only if we have valid URL and key
+const supabaseClient = () => {
+  if (!supabaseUrl || supabaseUrl === 'https://your-supabase-project-url.supabase.co') {
+    console.warn('Supabase URL is not configured. Using demo mode.');
+    return null;
+  }
+  return createClient(supabaseUrl, supabaseKey);
+};
+
+const supabase = supabaseClient();
+
+// Mock user for demo mode
+const mockUser = {
+  id: "mock-user-id",
+  email: "demo@example.com",
+  app_metadata: {},
+  user_metadata: { name: "Demo User" },
+  aud: "authenticated",
+  created_at: new Date().toISOString()
+};
+
+// Mock session for demo mode
+const mockSession = {
+  access_token: "mock-token",
+  refresh_token: "mock-refresh-token",
+  expires_in: 3600,
+  expires_at: Math.floor(Date.now() / 1000) + 3600,
+  user: mockUser
+};
 
 interface AuthContextType {
   user: User | null;
@@ -32,10 +61,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
+  // Demo mode
+  const isDemo = !supabase;
+
   // Function to refresh the session
   const refreshSession = async () => {
     try {
-      const { data, error } = await supabase.auth.getSession();
+      if (isDemo) {
+        // In demo mode, use mock data
+        console.info("Running in demo mode with mock user");
+        setUser(mockUser as User);
+        setSession(mockSession as Session);
+        setIsLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase!.auth.getSession();
       if (error) throw error;
       
       setSession(data.session);
@@ -52,7 +93,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Function to sign out
   const signOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
+      if (isDemo) {
+        // In demo mode, just clear state
+        setSession(null);
+        setUser(null);
+        navigate("/auth");
+        return;
+      }
+
+      const { error } = await supabase!.auth.signOut();
       if (error) throw error;
       
       setSession(null);
@@ -67,20 +116,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Initial session check
     refreshSession();
     
-    // Set up auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-        setUser(session?.user || null);
-        setIsLoading(false);
-      }
-    );
+    // Set up auth state change listener if not in demo mode
+    if (!isDemo && supabase) {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        (_event, session) => {
+          setSession(session);
+          setUser(session?.user || null);
+          setIsLoading(false);
+        }
+      );
 
-    // Clean up subscription
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
+      // Clean up subscription
+      return () => {
+        subscription.unsubscribe();
+      };
+    }
+  }, [isDemo]);
 
   const value = {
     user,
