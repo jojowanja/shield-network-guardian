@@ -12,6 +12,9 @@ import DevicesPage from "./pages/DevicesPage";
 import AuthPage from "./pages/AuthPage";
 import OverviewPage from "./pages/OverviewPage";
 import SettingsPage from "./pages/SettingsPage";
+import ProfilePage from "./pages/ProfilePage";
+import AnalyticsPage from "./pages/AnalyticsPage";
+import ExportPage from "./pages/ExportPage";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
@@ -54,6 +57,9 @@ const App = () => (
                 <SettingsPage />
               </ProtectedRoute>
             } />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/analytics" element={<AnalyticsPage />} />
+            <Route path="/export" element={<ExportPage />} />
             
             {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />

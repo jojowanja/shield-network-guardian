@@ -1,25 +1,55 @@
 
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
-import { Bell, Search } from "lucide-react";
+import { Bell, Search, User, ChartBar, FileExport, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/contexts/AuthContext";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Link } from "react-router-dom";
 
 interface DashboardLayoutProps {
   children: ReactNode;
 }
 
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
+  const isMobile = useIsMobile();
+  const { user, signOut } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
     <div className="flex h-screen w-full bg-gray-50 dark:bg-background">
-      <DashboardSidebar />
+      {!isMobile ? (
+        <DashboardSidebar />
+      ) : (
+        <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon" className="flex md:hidden">
+              <Menu size={20} />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="p-0">
+            <DashboardSidebar />
+          </SheetContent>
+        </Sheet>
+      )}
       
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="bg-white dark:bg-card h-16 border-b border-border flex items-center justify-between px-6 shadow-sm">
-          <div className="flex items-center space-x-4 w-1/3">
-            <div className="relative w-full max-w-md">
+        <header className="bg-white dark:bg-card h-16 border-b border-border flex items-center justify-between px-4 md:px-6 shadow-sm">
+          <div className="flex items-center space-x-4">
+            {isMobile && (
+              <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="md:hidden">
+                    <Menu size={20} />
+                  </Button>
+                </SheetTrigger>
+              </Sheet>
+            )}
+            <div className="relative w-full max-w-md hidden sm:block">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
               <Input 
                 placeholder="Search..." 
@@ -28,7 +58,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             </div>
           </div>
           
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 md:space-x-4">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative">
@@ -64,17 +94,48 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               </DropdownMenuContent>
             </DropdownMenu>
             
-            <div className="h-8 w-px bg-border"></div>
+            <div className="h-8 w-px bg-border hidden sm:block"></div>
             
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 rounded-full bg-shield flex items-center justify-center text-white">
-                <span className="font-semibold">JD</span>
-              </div>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="flex items-center space-x-2 px-2">
+                  <div className="w-8 h-8 rounded-full bg-shield flex items-center justify-center text-white">
+                    <span className="font-semibold">{user?.email?.substring(0, 2).toUpperCase() || "JD"}</span>
+                  </div>
+                  <span className="font-medium text-sm hidden md:inline-block">
+                    {user?.email?.split('@')[0] || "John Doe"}
+                  </span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem asChild>
+                  <Link to="/profile" className="cursor-pointer flex items-center">
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Profile</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/analytics" className="cursor-pointer flex items-center">
+                    <ChartBar className="mr-2 h-4 w-4" />
+                    <span>Analytics</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/export" className="cursor-pointer flex items-center">
+                    <FileExport className="mr-2 h-4 w-4" />
+                    <span>Export Data</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={signOut} className="cursor-pointer text-red-500">
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
         
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6">
           {children}
         </main>
       </div>
