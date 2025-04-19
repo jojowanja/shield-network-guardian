@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { createClient, Session, User } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
@@ -32,6 +31,7 @@ const mockUser = {
 const mockSession = {
   access_token: "mock-token",
   refresh_token: "mock-refresh-token",
+  token_type: "bearer",
   expires_in: 3600,
   expires_at: Math.floor(Date.now() / 1000) + 3600,
   user: mockUser
