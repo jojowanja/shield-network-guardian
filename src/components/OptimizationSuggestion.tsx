@@ -30,23 +30,28 @@ export const OptimizationSuggestion = ({
   };
 
   return (
-    <div className="border rounded-lg p-4 flex justify-between items-center animate-fade-in">
+    <div className="border rounded-lg p-4 flex justify-between items-center animate-fade-in hover:border-primary/50 transition-all duration-300 hover:shadow-md">
       <div className="flex items-start gap-4">
-        <div className={`h-10 w-10 rounded-full ${
+        <div className={`h-10 w-10 rounded-full transition-transform hover:scale-105 ${
           type === "warning" ? "bg-status-warning/20" : "bg-status-safe/20"
         } flex items-center justify-center ${
           type === "warning" ? "text-status-warning" : "text-status-safe"
         }`}>
-          {type === "warning" ? <Signal size={20} /> : <Wifi size={20} />}
+          {type === "warning" ? 
+            <Signal size={20} className="animate-pulse-soft" /> : 
+            <Wifi size={20} className="animate-pulse-soft" />
+          }
         </div>
         <div>
-          <p className="font-medium">{title}</p>
+          <p className="font-medium transition-colors hover:text-primary">{title}</p>
           <p className="text-sm text-muted-foreground">{description}</p>
         </div>
       </div>
       <Button 
         variant={type === "warning" ? "default" : "outline"}
-        className={type === "warning" ? "bg-shield hover:bg-shield-secondary" : ""}
+        className={`transition-all duration-300 hover:scale-105 ${
+          type === "warning" ? "bg-shield hover:bg-shield-secondary" : ""
+        }`}
         onClick={handleAction}
       >
         {actionLabel}
