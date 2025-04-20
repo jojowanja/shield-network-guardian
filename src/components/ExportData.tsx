@@ -1,9 +1,8 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, FileCsv, FilePdf, Download } from "lucide-react";
+import { FileText, Download } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -161,7 +160,7 @@ export const ExportData = () => {
               <div className="space-y-4">
                 <div className="rounded-md border border-border p-4 flex flex-col md:flex-row md:items-center justify-between">
                   <div className="flex items-center">
-                    <FileCsv className="h-8 w-8 mr-3 text-blue-500" />
+                    <FileText className="h-8 w-8 mr-3 text-blue-500" />
                     <div>
                       <div className="font-medium">Network Speed Data</div>
                       <div className="text-sm text-muted-foreground">CSV • 245 KB • April 18, 2025</div>
@@ -174,7 +173,7 @@ export const ExportData = () => {
                 
                 <div className="rounded-md border border-border p-4 flex flex-col md:flex-row md:items-center justify-between">
                   <div className="flex items-center">
-                    <FilePdf className="h-8 w-8 mr-3 text-red-500" />
+                    <FileText className="h-8 w-8 mr-3 text-red-500" />
                     <div>
                       <div className="font-medium">Monthly Network Report</div>
                       <div className="text-sm text-muted-foreground">PDF • 1.2 MB • April 15, 2025</div>

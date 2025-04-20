@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { FileExport } from "lucide-react";
+import { FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 // Sample data
@@ -53,11 +53,11 @@ export const EnhancedAnalytics = () => {
         <h1 className="text-2xl font-bold">Network Analytics</h1>
         <div className="flex items-center space-x-2">
           <Button variant="outline" onClick={() => handleExport('csv')}>
-            <FileExport className="mr-2 h-4 w-4" />
+            <FileText className="mr-2 h-4 w-4" />
             Export CSV
           </Button>
           <Button variant="outline" onClick={() => handleExport('pdf')}>
-            <FileExport className="mr-2 h-4 w-4" />
+            <FileText className="mr-2 h-4 w-4" />
             Export PDF
           </Button>
         </div>

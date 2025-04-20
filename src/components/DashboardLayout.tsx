@@ -1,7 +1,7 @@
 
 import { ReactNode, useState } from "react";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
-import { Bell, Search, User, ChartBar, FileExport, Menu } from "lucide-react";
+import { Bell, Search, User, ChartBar, FileText, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -122,7 +122,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link to="/export" className="cursor-pointer flex items-center">
-                    <FileExport className="mr-2 h-4 w-4" />
+                    <FileText className="mr-2 h-4 w-4" />
                     <span>Export Data</span>
                   </Link>
                 </DropdownMenuItem>
