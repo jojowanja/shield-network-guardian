@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { createClient } from '@supabase/supabase-js';
 import { useToast } from './use-toast';
@@ -12,9 +12,21 @@ const supabase = supabaseUrl !== 'https://your-supabase-project-url.supabase.co'
   ? createClient(supabaseUrl, supabaseKey)
   : null;
 
+// Mock usage data for the subscription optimizer
+const mockUsageStats = {
+  mondayUsage: 15,
+  tuesdayUsage: 22,
+  wednesdayUsage: 18,
+  thursdayUsage: 25,
+  fridayUsage: 20,
+  saturdayUsage: 10,
+  sundayUsage: 5
+};
+
 export const useStatsSubscription = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [stats, setStats] = useState(mockUsageStats);
 
   useEffect(() => {
     if (!supabase) return;
@@ -33,25 +45,33 @@ export const useStatsSubscription = () => {
           // Invalidate and refetch stats query
           queryClient.invalidateQueries({ queryKey: ['networkStats'] });
 
-          const stats = payload.new as NetworkStats;
+          const statsData = payload.new as NetworkStats;
+          
+          // Update the usage stats based on new network data
+          setStats(prevStats => ({
+            ...prevStats,
+            // Map new data to our usage structure (simplified)
+            mondayUsage: Math.max(prevStats.mondayUsage, statsData.downloadSpeed / 4),
+            tuesdayUsage: Math.max(prevStats.tuesdayUsage, statsData.downloadSpeed / 4)
+          }));
           
           // Enhanced toast notifications with more detailed information
-          if (stats.stability < 80) {
+          if (statsData.stability < 80) {
             toast({
               title: 'Network Stability Alert',
-              description: `Network stability has dropped to ${stats.stability.toFixed(1)}%`,
+              description: `Network stability has dropped to ${statsData.stability.toFixed(1)}%`,
               variant: 'destructive',
             });
-          } else if (stats.downloadSpeed < 50) {
+          } else if (statsData.downloadSpeed < 50) {
             toast({
               title: 'Network Speed Alert',
-              description: `Download speed has dropped to ${stats.downloadSpeed.toFixed(1)} Mbps`,
+              description: `Download speed has dropped to ${statsData.downloadSpeed.toFixed(1)} Mbps`,
               variant: 'destructive',
             });
-          } else if (stats.ping > 100) {
+          } else if (statsData.ping > 100) {
             toast({
               title: 'High Latency Alert',
-              description: `Network latency has increased to ${stats.ping.toFixed(0)}ms`,
+              description: `Network latency has increased to ${statsData.ping.toFixed(0)}ms`,
               variant: 'destructive',
             });
           }
@@ -63,4 +83,6 @@ export const useStatsSubscription = () => {
       subscription.unsubscribe();
     };
   }, [queryClient, toast]);
+
+  return { stats };
 };
