@@ -68,21 +68,19 @@ export const SubscriptionOptimizer = () => {
                   width={40}
                 />
                 <Tooltip 
-                  content={(props) => {
-                    if (props.active && props.payload && props.payload.length) {
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      // Return as a string instead of JSX to fix type error
                       return (
-                        <ChartTooltipContent
-                          className="border border-muted bg-popover p-2 text-popover-foreground shadow-md"
-                          content={
-                            <div className="flex flex-col gap-0.5">
-                              <span className="text-xs uppercase text-muted-foreground">Usage</span>
-                              <span className="font-bold">{props.payload[0].value} Mbps</span>
-                            </div>
-                          }
-                        />
+                        <div className="border border-muted bg-popover p-2 text-popover-foreground shadow-md">
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-xs uppercase text-muted-foreground">Usage</span>
+                            <span className="font-bold">{payload[0].value} Mbps</span>
+                          </div>
+                        </div>
                       );
                     }
-                    return null;
+                    return "";
                   }}
                 />
                 <Bar dataKey="usage" fill="var(--color-usage)" radius={[4, 4, 0, 0]} />
