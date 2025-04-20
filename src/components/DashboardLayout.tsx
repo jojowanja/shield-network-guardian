@@ -26,11 +26,6 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <DashboardSidebar />
       ) : (
         <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="flex md:hidden">
-              <Menu size={20} />
-            </Button>
-          </SheetTrigger>
           <SheetContent side="left" className="p-0">
             <DashboardSidebar />
           </SheetContent>
@@ -41,13 +36,14 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <header className="bg-white dark:bg-card h-16 border-b border-border flex items-center justify-between px-4 md:px-6 shadow-sm">
           <div className="flex items-center space-x-4">
             {isMobile && (
-              <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" className="md:hidden">
-                    <Menu size={20} />
-                  </Button>
-                </SheetTrigger>
-              </Sheet>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="md:hidden"
+                onClick={() => setSidebarOpen(true)}
+              >
+                <Menu size={20} />
+              </Button>
             )}
             <div className="relative w-full max-w-md hidden sm:block">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />

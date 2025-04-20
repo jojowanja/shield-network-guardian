@@ -43,6 +43,7 @@ interface AuthContextType {
   isLoading: boolean;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -51,6 +52,7 @@ const AuthContext = createContext<AuthContextType>({
   isLoading: true,
   signOut: async () => {},
   refreshSession: async () => {},
+  signIn: async () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -63,6 +65,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Demo mode
   const isDemo = !supabase;
+
+  // Function to sign in
+  const signIn = async (email: string, password: string) => {
+    try {
+      setIsLoading(true);
+      
+      if (isDemo) {
+        // In demo mode, simulate a successful login
+        console.info("Demo login with:", email);
+        setUser(mockUser as User);
+        setSession(mockSession as Session);
+        
+        // Redirect to home page after successful login
+        navigate("/");
+        return;
+      }
+
+      const { data, error } = await supabase!.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) throw error;
+      
+      setUser(data.user);
+      setSession(data.session);
+      
+      // Redirect to home page after successful login
+      navigate("/");
+    } catch (error) {
+      console.error("Error signing in:", error);
+      // We'll keep the user on the auth page in case of an error
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Function to refresh the session
   const refreshSession = async () => {
@@ -139,6 +177,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     isLoading,
     signOut,
     refreshSession,
+    signIn,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

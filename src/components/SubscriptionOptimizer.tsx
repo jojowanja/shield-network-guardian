@@ -2,7 +2,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import { useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useStatsSubscription } from "@/hooks/useStatsSubscription";
@@ -41,8 +41,8 @@ export const SubscriptionOptimizer = () => {
   // Calculate if current plan is optimal based on usage
   const currentSpeed = 25; // Mbps - simulated current plan
   const maxUsage = Math.max(...usageData.map(d => d.usage));
-  const utilizationPercentage = (maxUsage / currentSpeed) * 100;
-  const needsUpgrade = utilizationPercentage > 90;
+  const utilizationPercentage = Math.round((maxUsage / currentSpeed) * 100);
+  const needsUpgrade = utilizationPercentage > 80;
   const underutilized = utilizationPercentage < 50;
 
   return (
@@ -92,14 +92,14 @@ export const SubscriptionOptimizer = () => {
 
         {needsUpgrade && (
           <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-800 dark:border-amber-900 dark:bg-amber-900/20 dark:text-amber-400">
-            <p className="font-medium">You've exceeded 90% of your plan capacity several times this week.</p>
+            <p className="font-medium">You've exceeded {utilizationPercentage}% of your plan capacity several times this week.</p>
             <p className="text-sm mt-1">Consider upgrading your plan for better performance.</p>
           </div>
         )}
         
         {underutilized && (
           <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-900/20 dark:text-emerald-400">
-            <p className="font-medium">You're using less than 50% of your plan capacity.</p>
+            <p className="font-medium">You're using only {utilizationPercentage}% of your plan capacity.</p>
             <p className="text-sm mt-1">You might save money with a lower-tier plan.</p>
           </div>
         )}
