@@ -13,20 +13,20 @@ export const AuthForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, isLoading: authLoading, user } = useAuth();
   const navigate = useNavigate();
+  const isFormLoading = isLoading || authLoading;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
     try {
       await signIn(email, password);
       toast({
         title: "Login successful",
         description: "Welcome back to Shield!",
       });
-      navigate('/'); // Redirect to home page after successful login
+      // No need to navigate here; redirect is handled in AuthContext
     } catch (error) {
       console.error("Login error:", error);
       toast({
@@ -39,6 +39,12 @@ export const AuthForm = () => {
     }
   };
 
+  // If user is already logged in, redirect to home
+  if (user) {
+    navigate("/");
+    return null;
+  }
+
   return (
     <div className="flex items-center justify-center min-h-screen">
       <Card className="w-full max-w-md">
@@ -46,25 +52,23 @@ export const AuthForm = () => {
           <CardTitle className="text-2xl">Authentication</CardTitle>
           <CardDescription>Secure access to your Shield dashboard</CardDescription>
         </CardHeader>
-
         <Tabs defaultValue="login" className="w-full">
           <TabsList className="grid grid-cols-2 w-full">
             <TabsTrigger value="login">Login</TabsTrigger>
             <TabsTrigger value="register">Register</TabsTrigger>
           </TabsList>
-
           <TabsContent value="login">
             <form onSubmit={handleSubmit}>
               <CardContent className="space-y-4 pt-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input 
-                    id="email" 
-                    type="email" 
-                    placeholder="you@example.com" 
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="you@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    required 
+                    required
                   />
                 </div>
                 <div className="space-y-2">
@@ -74,23 +78,22 @@ export const AuthForm = () => {
                       Forgot password?
                     </a>
                   </div>
-                  <Input 
-                    id="password" 
-                    type="password" 
+                  <Input
+                    id="password"
+                    type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    required 
+                    required
                   />
                 </div>
               </CardContent>
               <CardFooter>
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Logging in..." : "Login"}
+                <Button type="submit" className="w-full" disabled={isFormLoading}>
+                  {isFormLoading ? "Logging in..." : "Login"}
                 </Button>
               </CardFooter>
             </form>
           </TabsContent>
-          
           <TabsContent value="register">
             <CardContent className="space-y-4 pt-4">
               <div className="space-y-2">
@@ -107,8 +110,8 @@ export const AuthForm = () => {
               </div>
             </CardContent>
             <CardFooter>
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Creating Account..." : "Create Account"}
+              <Button type="submit" className="w-full" disabled={isFormLoading}>
+                {isFormLoading ? "Creating Account..." : "Create Account"}
               </Button>
             </CardFooter>
           </TabsContent>

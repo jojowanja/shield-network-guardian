@@ -70,33 +70,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      
       if (isDemo) {
-        // In demo mode, simulate a successful login
-        console.info("Demo login with:", email);
         setUser(mockUser as User);
         setSession(mockSession as Session);
-        
-        // Redirect to home page after successful login
-        navigate("/");
+        navigate("/"); // Only navigate here on successful demo login
         return;
       }
-
       const { data, error } = await supabase!.auth.signInWithPassword({
         email,
         password,
       });
-      
       if (error) throw error;
-      
       setUser(data.user);
       setSession(data.session);
-      
-      // Redirect to home page after successful login
-      navigate("/");
+      navigate("/"); // Only navigate here on successful login
     } catch (error) {
       console.error("Error signing in:", error);
-      // We'll keep the user on the auth page in case of an error
+      // Don't navigate here
+      throw error;
     } finally {
       setIsLoading(false);
     }

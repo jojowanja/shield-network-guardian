@@ -1,4 +1,3 @@
-
 import { ReactNode, useState } from "react";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { Bell, Search, User, ChartBar, FileText, Menu } from "lucide-react";
@@ -10,6 +9,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/contexts/AuthContext";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Link, useNavigate } from "react-router-dom";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -20,7 +20,6 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   
-  // Modified to support more breakpoints
   const isMobile = useIsMobile();
 
   const handleSignOut = () => {
@@ -30,10 +29,8 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
   return (
     <div className="flex h-screen w-full bg-gray-50 dark:bg-background">
-      {/* Show sidebar for non-mobile screens */}
       <DashboardSidebar />
       
-      {/* Mobile sidebar with sheet */}
       {isMobile && (
         <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
           <SheetContent side="left" className="p-0 w-[85%] max-w-[300px] sm:w-[350px]">
@@ -65,6 +62,8 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           </div>
           
           <div className="flex items-center space-x-2 md:space-x-4">
+            <ThemeToggle />
+            
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative">
