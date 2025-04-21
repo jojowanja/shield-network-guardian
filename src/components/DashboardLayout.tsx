@@ -9,24 +9,34 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/contexts/AuthContext";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 interface DashboardLayoutProps {
   children: ReactNode;
 }
 
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
-  const isMobile = useIsMobile();
-  const { user, signOut } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  
+  // Modified to support more breakpoints
+  const isMobile = useIsMobile();
+
+  const handleSignOut = () => {
+    signOut();
+    navigate('/auth');
+  };
 
   return (
     <div className="flex h-screen w-full bg-gray-50 dark:bg-background">
-      {!isMobile ? (
-        <DashboardSidebar />
-      ) : (
+      {/* Show sidebar for non-mobile screens */}
+      <DashboardSidebar />
+      
+      {/* Mobile sidebar with sheet */}
+      {isMobile && (
         <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-          <SheetContent side="left" className="p-0">
+          <SheetContent side="left" className="p-0 w-[85%] max-w-[300px] sm:w-[350px]">
             <DashboardSidebar />
           </SheetContent>
         </Sheet>
@@ -123,7 +133,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={signOut} className="cursor-pointer text-red-500">
+                <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-red-500">
                   Logout
                 </DropdownMenuItem>
               </DropdownMenuContent>

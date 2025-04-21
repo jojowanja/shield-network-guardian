@@ -1,3 +1,4 @@
+
 import {
   Home as HomeIcon,
   Activity as ActivityIcon,
@@ -22,7 +23,7 @@ export function DashboardSidebar() {
   };
 
   return (
-    <aside className="hidden md:flex md:w-64 md:flex-col md:min-h-screen border-r border-border bg-card">
+    <aside className="hidden sm:flex sm:w-64 sm:flex-col sm:min-h-screen border-r border-border bg-card">
       <div className="flex flex-col flex-1">
         <div className="flex items-center h-16 border-b border-border px-6">
           <Link to="/" className="flex items-center space-x-2">

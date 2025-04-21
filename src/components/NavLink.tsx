@@ -20,7 +20,7 @@ export const NavLink: React.FC<NavLinkProps> = ({ to, icon, label, isActive }) =
       }`}
     >
       <span className="flex items-center justify-center">{icon}</span>
-      <span className="text-sm font-medium">{label}</span>
+      <span className="text-sm font-medium truncate">{label}</span>
     </Link>
   );
 };
