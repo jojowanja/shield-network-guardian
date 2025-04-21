@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,14 +5,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Wifi, WifiOff, Router, Fingerprint, Eye, EyeOff } from "lucide-react";
+import { Wifi, WifiOff, Router, Fingerprint, Eye, EyeOff, Zap } from "lucide-react";
+import { useNetworkStats } from "@/hooks/useNetworkStats";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
+import { SpeedTestSummary } from "./SpeedTestSummary";
 
 export const SmartConnect = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [guestNetworkEnabled, setGuestNetworkEnabled] = useState(true);
   const [showGuestPassword, setShowGuestPassword] = useState(false);
-  
-  // Simulated network data
+  const [isTestingSpeed, setIsTestingSpeed] = useState(false);
+  const { stats, updateStats } = useNetworkStats();
+  const { toast } = useToast();
+
   const mainNetwork = {
     ssid: "Shield_Home_Network",
     password: "StrongP@ssw0rd123!",
@@ -31,7 +36,17 @@ export const SmartConnect = () => {
     connectedDevices: 2,
     internetOnly: true
   };
-  
+
+  const handleSpeedTest = async () => {
+    setIsTestingSpeed(true);
+    await updateStats();
+    setIsTestingSpeed(false);
+    toast({
+      title: "Speed Test Complete",
+      description: `Download: ${stats.downloadSpeed.toFixed(1)} Mbps, Upload: ${stats.uploadSpeed.toFixed(1)} Mbps, Ping: ${stats.ping.toFixed(0)} ms`,
+    });
+  };
+
   return (
     <div className="space-y-6">
       <Tabs defaultValue="main-network" className="space-y-6">
@@ -59,6 +74,12 @@ export const SmartConnect = () => {
                 </div>
               </CardHeader>
               <CardContent className="space-y-6">
+                <SpeedTestSummary
+                  download={stats.downloadSpeed}
+                  upload={stats.uploadSpeed}
+                  ping={stats.ping}
+                  lastUpdate={stats.lastUpdate}
+                />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="network-name">Network Name (SSID)</Label>
@@ -146,7 +167,24 @@ export const SmartConnect = () => {
                 </div>
                 
                 <div className="flex flex-col mt-4 gap-2">
-                  <Button size="sm" className="w-full">Test Speed</Button>
+                  <Button
+                    size="sm"
+                    className="w-full"
+                    onClick={handleSpeedTest}
+                    disabled={isTestingSpeed}
+                  >
+                    {isTestingSpeed ? (
+                      <>
+                        <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                        Testing...
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="mr-2 h-4 w-4" />
+                        Test Speed
+                      </>
+                    )}
+                  </Button>
                   <Button size="sm" variant="outline" className="w-full">Restart Network</Button>
                 </div>
               </CardContent>
