@@ -1,3 +1,4 @@
+
 import { ReactNode, useState } from "react";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { Bell, Search, User, ChartBar, FileText, Menu } from "lucide-react";
@@ -7,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/contexts/AuthContext";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Link, useNavigate } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -29,8 +30,10 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
   return (
     <div className="flex h-screen w-full bg-gray-50 dark:bg-background">
-      <DashboardSidebar />
+      {/* Desktop sidebar - only show when not mobile */}
+      {!isMobile && <DashboardSidebar />}
       
+      {/* Mobile sidebar - conditionally shown via Sheet component */}
       {isMobile && (
         <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
           <SheetContent side="left" className="p-0 w-[85%] max-w-[300px] sm:w-[350px]">
