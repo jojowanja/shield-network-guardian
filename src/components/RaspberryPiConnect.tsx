@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useRaspberryPi } from "@/hooks/useRaspberryPi";
-import { Wifi, WifiOff } from "lucide-react";
+import { Wifi, WifiOff, HardDrive, HardDriveDownload } from "lucide-react";
 
 export const RaspberryPiConnect = () => {
   const [ipAddress, setIpAddress] = useState("");
@@ -13,7 +13,20 @@ export const RaspberryPiConnect = () => {
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
-        <CardTitle>Raspberry Pi Connection</CardTitle>
+        <CardTitle>
+          Raspberry Pi Connection
+          {status.connected ? (
+            <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-xs text-green-700 dark:text-green-200 rounded-md">
+              <HardDriveDownload className="inline-block" size={14} />
+              Detected
+            </span>
+          ) : (
+            <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 bg-muted text-xs text-muted-foreground rounded-md">
+              <HardDrive className="inline-block" size={14} />
+              Offline
+            </span>
+          )}
+        </CardTitle>
         <CardDescription>
           Connect to your Raspberry Pi device for real-time network monitoring
         </CardDescription>
@@ -63,3 +76,4 @@ export const RaspberryPiConnect = () => {
     </Card>
   );
 };
+

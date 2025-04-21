@@ -41,7 +41,8 @@ export function DashboardSidebar() {
             <NavLink to="/devices" isActive={isActiveRoute("/devices")} icon={<SmartphoneIcon size={20} />} label="Devices" />
             <NavLink to="/overview" isActive={isActiveRoute("/overview")} icon={<LayoutDashboardIcon size={20} />} label="Overview" />
             <NavLink to="/security" isActive={isActiveRoute("/security")} icon={<ShieldCheckIcon size={20} />} label="Security" />
-            
+            <NavLink to="/export" isActive={isActiveRoute("/export")} icon={<FileText size={20} />} label="Export" />
+            <NavLink to="/guest-access" isActive={isActiveRoute("/guest-access")} icon={<UserIcon size={20} />} label="Guest Access" />
             <div className="mt-6 mb-3">
               <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3">
                 Account

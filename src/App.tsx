@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,6 +15,7 @@ import ProfilePage from "./pages/ProfilePage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import ExportPage from "./pages/ExportPage";
 import SecurityPage from "./pages/SecurityPage";
+import GuestAccessPage from "./pages/GuestAccessPage";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
@@ -66,6 +66,11 @@ const App = () => (
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />
             <Route path="/export" element={<ExportPage />} />
+            <Route path="/guest-access" element={
+              <ProtectedRoute>
+                <GuestAccessPage />
+              </ProtectedRoute>
+            } />
             
             {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />

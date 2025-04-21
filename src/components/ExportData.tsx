@@ -50,7 +50,15 @@ export const ExportData = () => {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Export Data</h1>
-      
+      <div className="rounded-lg bg-muted/30 p-4 !mb-4 flex items-center gap-4">
+        <span className="text-sm font-medium">
+          Export your logs or usage as <span className="underline">PDF or CSV</span> with a single click!
+        </span>
+        <Button size="sm" variant="secondary" onClick={handleExport}>
+          <Download className="mr-2 h-4 w-4" />
+          Quick Export
+        </Button>
+      </div>
       <Tabs defaultValue="export" className="w-full">
         <TabsList className="grid grid-cols-2 mb-4">
           <TabsTrigger value="export">Export Options</TabsTrigger>
