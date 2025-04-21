@@ -9,6 +9,7 @@ import {
   User as UserIcon,
   Shield as ShieldIcon,
   ShieldCheck as ShieldCheckIcon,
+  FileText
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
