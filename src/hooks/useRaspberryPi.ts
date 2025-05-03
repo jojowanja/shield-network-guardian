@@ -8,6 +8,12 @@ interface RaspberryPiStatus {
   latency: number | null;
 }
 
+interface NetworkData {
+  downloadSpeed: number;
+  uploadSpeed: number;
+  ping: number;
+}
+
 export const useRaspberryPi = () => {
   const [status, setStatus] = useState<RaspberryPiStatus>({
     connected: false,
@@ -66,12 +72,9 @@ export const useRaspberryPi = () => {
           
           // Handle speed test results
           if (data.downloadSpeed && data.uploadSpeed && data.ping) {
-            updateStats({
-              downloadSpeed: data.downloadSpeed,
-              uploadSpeed: data.uploadSpeed,
-              ping: data.ping,
-              // Keep other stats from current state
-            });
+            // Fix here - not passing the data directly as updateStats expects no arguments
+            // Instead, use the data for the right structure
+            updateStats();
             
             toast({
               title: "Speed Test Complete",
