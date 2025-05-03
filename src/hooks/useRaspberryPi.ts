@@ -1,6 +1,6 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { useToast } from "@/hooks/use-toast";
+import { useNetworkStats } from "@/hooks/useNetworkStats";
 
 interface RaspberryPiStatus {
   connected: boolean;
@@ -16,6 +16,7 @@ export const useRaspberryPi = () => {
   });
   const wsRef = useRef<WebSocket | null>(null);
   const { toast } = useToast();
+  const { updateStats } = useNetworkStats();
 
   useEffect(() => {
     return () => {
@@ -54,10 +55,29 @@ export const useRaspberryPi = () => {
       ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          setStatus(prev => ({
-            ...prev,
-            latency: data.latency || prev.latency
-          }));
+          
+          // Update latency status
+          if (data.latency) {
+            setStatus(prev => ({
+              ...prev,
+              latency: data.latency || prev.latency
+            }));
+          }
+          
+          // Handle speed test results
+          if (data.downloadSpeed && data.uploadSpeed && data.ping) {
+            updateStats({
+              downloadSpeed: data.downloadSpeed,
+              uploadSpeed: data.uploadSpeed,
+              ping: data.ping,
+              // Keep other stats from current state
+            });
+            
+            toast({
+              title: "Speed Test Complete",
+              description: `Download: ${data.downloadSpeed.toFixed(1)} Mbps, Upload: ${data.uploadSpeed.toFixed(1)} Mbps`,
+            });
+          }
         } catch (error) {
           console.error('Error parsing WebSocket message:', error);
         }
@@ -107,10 +127,23 @@ export const useRaspberryPi = () => {
       description: "Successfully disconnected from Raspberry Pi",
     });
   };
+  
+  const requestSpeedTest = () => {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send('speedtest');
+      toast({
+        title: "Speed Test Started",
+        description: "Running speed test on Raspberry Pi...",
+      });
+      return true;
+    }
+    return false;
+  };
 
   return {
     status,
     connectToDevice,
-    disconnectDevice
+    disconnectDevice,
+    requestSpeedTest
   };
 };
