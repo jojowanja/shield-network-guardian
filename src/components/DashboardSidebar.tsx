@@ -24,7 +24,7 @@ export function DashboardSidebar() {
   };
 
   return (
-    <aside className="hidden sm:flex sm:w-64 sm:flex-col h-screen overflow-y-auto border-r border-border bg-card">
+    <aside className="flex w-full sm:w-64 flex-col h-full overflow-y-auto border-r border-border bg-card">
       <div className="flex flex-col flex-1">
         <div className="flex items-center h-16 border-b border-border px-6">
           <Link to="/" className="flex items-center space-x-2">

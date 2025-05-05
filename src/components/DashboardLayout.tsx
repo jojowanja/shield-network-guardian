@@ -34,7 +34,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         {/* Desktop sidebar - only show when not mobile */}
         {!isMobile && <DashboardSidebar />}
         
-        {/* Mobile sidebar - conditionally shown via Sheet component */}
+        {/* Mobile sidebar - use Sheet component for slide-over menu */}
         {isMobile && (
           <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
             <SheetContent side="left" className="p-0 w-[85%] max-w-[300px] sm:w-[350px]">
