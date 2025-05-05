@@ -2,14 +2,23 @@
 /* Reset default styling */
 * {
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-/* Remove fixed width constraints that could cause responsive issues */
+/* Remove fixed width constraints and ensure full width */
 #root {
   width: 100%;
+  max-width: 100%;
   margin: 0;
   padding: 0;
   text-align: left;
+}
+
+body, html {
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 /* Keep animation styles */

@@ -29,7 +29,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   };
 
   return (
-    <div className="flex flex-col h-screen w-full overflow-hidden bg-gray-50 dark:bg-background">
+    <div className="flex flex-col h-screen max-h-screen w-full overflow-hidden bg-gray-50 dark:bg-background">
       <div className="flex flex-1 overflow-hidden w-full">
         {/* Desktop sidebar - only show when not mobile */}
         {!isMobile && <DashboardSidebar />}
@@ -145,7 +145,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           </header>
           
           <main className="flex-1 overflow-y-auto p-4 md:p-6 w-full min-w-0">
-            <div className="w-full max-w-full">
+            <div className="w-full max-w-[100%] mx-auto">
               {children}
             </div>
           </main>

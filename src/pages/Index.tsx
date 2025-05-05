@@ -5,7 +5,9 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 const Index = () => {
   return (
     <DashboardLayout>
-      <GuardianShield />
+      <div className="w-full">
+        <GuardianShield />
+      </div>
     </DashboardLayout>
   );
 };
