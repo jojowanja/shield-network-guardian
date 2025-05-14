@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Shield, DeviceTablet } from "lucide-react";
+import { Shield, Tablet } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { updateDevice } from "@/services/networkService";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -83,7 +83,7 @@ export const NewDeviceAlert = ({ device, open, onOpenChange }: NewDeviceAlertPro
       <AlertDialogContent>
         <AlertDialogHeader>
           <div className="h-12 w-12 rounded-full bg-amber-100 flex items-center justify-center mb-4">
-            <DeviceTablet className="h-6 w-6 text-amber-600" />
+            <Tablet className="h-6 w-6 text-amber-600" />
           </div>
           <AlertDialogTitle>New Device Detected</AlertDialogTitle>
           <AlertDialogDescription>
