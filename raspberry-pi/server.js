@@ -1,4 +1,3 @@
-
 const express = require('express');
 const http = require('http');
 const { WebSocketServer } = require('ws');
@@ -10,6 +9,7 @@ const server = http.createServer(app);
 const wss = new WebSocketServer({ server, path: '/network-stats' });
 
 app.use(cors());
+app.use(express.json());
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -18,6 +18,36 @@ app.get('/health', (req, res) => {
 
 // Store connected clients
 const clients = new Set();
+
+// Endpoint to report suspicious devices
+app.post('/suspicious-device', (req, res) => {
+  try {
+    const { deviceInfo, threatScore } = req.body;
+    
+    if (!deviceInfo || !deviceInfo.mac) {
+      return res.status(400).json({ error: 'Missing device information' });
+    }
+    
+    console.log(`Suspicious device detected: ${JSON.stringify(deviceInfo)}, Threat Score: ${threatScore}`);
+    
+    // Broadcast to all connected clients
+    clients.forEach(client => {
+      if (client.readyState === 1) { // 1 = OPEN
+        client.send(JSON.stringify({
+          type: 'suspicious_device',
+          deviceInfo,
+          threatScore,
+          timestamp: new Date().toISOString()
+        }));
+      }
+    });
+    
+    res.status(200).json({ success: true });
+  } catch (error) {
+    console.error('Error processing suspicious device:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 // Function to run a network speed test
 function runSpeedTest() {
@@ -64,6 +94,43 @@ function getLatency() {
   });
 }
 
+// Function to scan for devices on network
+function scanNetworkDevices() {
+  return new Promise((resolve, reject) => {
+    exec('arp -a', (error, stdout, stderr) => {
+      if (error) {
+        console.error(`Error scanning network: ${error}`);
+        return reject(error);
+      }
+      
+      try {
+        const lines = stdout.split('\n');
+        const devices = lines
+          .filter(line => line.trim().length > 0)
+          .map(line => {
+            // Parse arp output format which varies by OS
+            const ipMatch = line.match(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/);
+            const macMatch = line.match(/([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})/);
+            const hostnameMatch = line.match(/\(([^)]+)\)/);
+            
+            return {
+              ip: ipMatch ? ipMatch[0] : 'unknown',
+              mac: macMatch ? macMatch[0] : 'unknown',
+              hostname: hostnameMatch ? hostnameMatch[1] : '',
+              lastSeen: new Date().toISOString()
+            };
+          })
+          .filter(device => device.ip !== 'unknown' && device.mac !== 'unknown');
+        
+        return resolve(devices);
+      } catch (e) {
+        console.error('Error parsing device scan results:', e);
+        reject(e);
+      }
+    });
+  });
+}
+
 // WebSocket connection handler
 wss.on('connection', (ws) => {
   console.log('Client connected');
@@ -89,6 +156,17 @@ wss.on('connection', (ws) => {
         ws.send(JSON.stringify({ error: 'Speed test failed' }));
       }
     }
+    
+    // Handle device scan request
+    if (msg === 'scandevices') {
+      try {
+        const devices = await scanNetworkDevices();
+        ws.send(JSON.stringify({ type: 'device_scan', devices }));
+      } catch (error) {
+        console.error('Device scan failed:', error);
+        ws.send(JSON.stringify({ error: 'Device scan failed' }));
+      }
+    }
   });
   
   // Handle client disconnect
@@ -110,6 +188,22 @@ setInterval(async () => {
     });
   }
 }, 5000); // Every 5 seconds
+
+// Periodically scan for new devices (every 5 minutes)
+setInterval(async () => {
+  if (clients.size > 0) {
+    try {
+      const devices = await scanNetworkDevices();
+      clients.forEach(client => {
+        if (client.readyState === 1) { // 1 = OPEN
+          client.send(JSON.stringify({ type: 'device_scan', devices }));
+        }
+      });
+    } catch (err) {
+      console.error('Periodic device scan failed:', err);
+    }
+  }
+}, 300000); // Every 5 minutes
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {

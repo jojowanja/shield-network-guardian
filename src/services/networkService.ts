@@ -25,6 +25,8 @@ export interface Device {
   lastSeen: string;
   bandwidth: number; // in Mbps
   userId: string;
+  owner?: string;     // Added for device ownership
+  isGuest?: boolean;  // Added to mark guest devices
 }
 
 export interface NetworkStats {
@@ -70,7 +72,7 @@ export const fetchDevices = async () => {
   return data;
 };
 
-// Mock data to use when Supabase is not configured
+// Updated mock data with new fields
 const mockDevices = [
   {
     id: "1",
@@ -81,7 +83,9 @@ const mockDevices = [
     status: "online",
     lastSeen: new Date().toISOString(),
     bandwidth: 12.5,
-    userId: "mock-user-id"
+    userId: "mock-user-id",
+    owner: "John",
+    isGuest: false
   },
   {
     id: "2",
@@ -92,7 +96,9 @@ const mockDevices = [
     status: "online",
     lastSeen: new Date().toISOString(),
     bandwidth: 5.2,
-    userId: "mock-user-id"
+    userId: "mock-user-id",
+    owner: "Sarah",
+    isGuest: false
   },
   {
     id: "3",
@@ -103,7 +109,22 @@ const mockDevices = [
     status: "offline",
     lastSeen: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
     bandwidth: 0,
-    userId: "mock-user-id"
+    userId: "mock-user-id",
+    owner: "Living Room",
+    isGuest: false
+  },
+  {
+    id: "4",
+    name: "Guest Laptop",
+    type: "laptop",
+    ip: "192.168.1.104",
+    mac: "S9:T0:U1:V2:W3:X4",
+    status: "online",
+    lastSeen: new Date().toISOString(),
+    bandwidth: 3.7,
+    userId: "mock-user-id",
+    owner: "Guest",
+    isGuest: true
   }
 ];
 
@@ -129,6 +150,11 @@ export const addDevice = async (device: Omit<Device, "id" | "userId">) => {
 export const updateDevice = async (id: string, updates: Partial<Device>) => {
   if (!supabase) {
     // Return mock response
+    const deviceIndex = mockDevices.findIndex(d => d.id === id);
+    if (deviceIndex >= 0) {
+      mockDevices[deviceIndex] = { ...mockDevices[deviceIndex], ...updates };
+      return mockDevices[deviceIndex];
+    }
     return { ...updates, id, userId: "mock-user-id" };
   }
 
@@ -213,7 +239,7 @@ export const addNetworkStat = async (stat: Omit<NetworkStats, "id" | "userId">) 
   return data[0];
 };
 
-// Mock security events
+// Updated mock security events with new device alerts
 const mockSecurityEvents = [
   {
     id: "1",
@@ -243,6 +269,16 @@ const mockSecurityEvents = [
     description: "Network configuration changed",
     timestamp: new Date(Date.now() - 86400000).toISOString(),
     resolved: true,
+    userId: "mock-user-id"
+  },
+  {
+    id: "4",
+    deviceId: null,
+    eventType: "new_device",
+    severity: "medium",
+    description: "Unknown device detected on your network",
+    timestamp: new Date().toISOString(),
+    resolved: false,
     userId: "mock-user-id"
   }
 ];

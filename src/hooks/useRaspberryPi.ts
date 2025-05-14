@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { useNetworkStats } from "@/hooks/useNetworkStats";
@@ -12,6 +13,13 @@ interface NetworkData {
   downloadSpeed: number;
   uploadSpeed: number;
   ping: number;
+}
+
+// Declare global WebSocket for TypeScript
+declare global {
+  interface Window {
+    raspberryPiWebSocket: WebSocket | null;
+  }
 }
 
 export const useRaspberryPi = () => {
@@ -44,6 +52,8 @@ export const useRaspberryPi = () => {
       // Initialize WebSocket connection
       const ws = new WebSocket(`ws://${ipAddress}:3000/network-stats`);
       wsRef.current = ws;
+      // Store the WebSocket in the window object for global access
+      window.raspberryPiWebSocket = ws;
 
       ws.onopen = () => {
         setStatus({
@@ -56,6 +66,9 @@ export const useRaspberryPi = () => {
           title: "Connected to Raspberry Pi",
           description: `Successfully connected to device at ${ipAddress}`,
         });
+        
+        // Immediately scan for devices
+        ws.send('scandevices');
       };
 
       ws.onmessage = (event) => {
@@ -72,8 +85,6 @@ export const useRaspberryPi = () => {
           
           // Handle speed test results
           if (data.downloadSpeed && data.uploadSpeed && data.ping) {
-            // Fix here - not passing the data directly as updateStats expects no arguments
-            // Instead, use the data for the right structure
             updateStats();
             
             toast({
@@ -105,6 +116,7 @@ export const useRaspberryPi = () => {
           title: "Connection Closed",
           description: "Connection to Raspberry Pi was closed",
         });
+        window.raspberryPiWebSocket = null;
       };
     } catch (error) {
       toast({
@@ -124,6 +136,7 @@ export const useRaspberryPi = () => {
       ipAddress: null,
       latency: null
     });
+    window.raspberryPiWebSocket = null;
     
     toast({
       title: "Disconnected",
@@ -142,11 +155,24 @@ export const useRaspberryPi = () => {
     }
     return false;
   };
+  
+  const scanDevices = () => {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send('scandevices');
+      toast({
+        title: "Device Scan Started",
+        description: "Scanning your network for devices...",
+      });
+      return true;
+    }
+    return false;
+  };
 
   return {
     status,
     connectToDevice,
     disconnectDevice,
-    requestSpeedTest
+    requestSpeedTest,
+    scanDevices
   };
 };
