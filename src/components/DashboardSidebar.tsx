@@ -9,15 +9,19 @@ import {
   User as UserIcon,
   Shield as ShieldIcon,
   ShieldCheck as ShieldCheckIcon,
-  FileText
+  FileText,
+  Crown
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/contexts/SubscriptionContext";
+import { Badge } from "@/components/ui/badge";
 
 export function DashboardSidebar() {
   const location = useLocation();
   const { user } = useAuth();
+  const { subscriptionTier, isPremium } = useSubscription();
 
   const isActiveRoute = (route: string) => {
     return location.pathname === route;
@@ -44,6 +48,32 @@ export function DashboardSidebar() {
             <NavLink to="/security" isActive={isActiveRoute("/security")} icon={<ShieldCheckIcon size={20} />} label="Security" />
             <NavLink to="/export" isActive={isActiveRoute("/export")} icon={<FileText size={20} />} label="Export" />
             <NavLink to="/guest-access" isActive={isActiveRoute("/guest-access")} icon={<UserIcon size={20} />} label="Guest Access" />
+            
+            <div className="mt-6 mb-3">
+              <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3">
+                Premium
+              </div>
+            </div>
+            
+            <div className="relative">
+              <NavLink 
+                to="/subscription" 
+                isActive={isActiveRoute("/subscription")} 
+                icon={<Crown size={20} />} 
+                label="Subscription" 
+              />
+              {!isPremium && (
+                <Badge className="absolute -top-1 -right-1 bg-amber-500 text-xs px-1 py-0">
+                  Free
+                </Badge>
+              )}
+              {isPremium && (
+                <Badge className="absolute -top-1 -right-1 bg-green-500 text-xs px-1 py-0 capitalize">
+                  {subscriptionTier}
+                </Badge>
+              )}
+            </div>
+            
             <div className="mt-6 mb-3">
               <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3">
                 Account
@@ -79,7 +109,7 @@ export function DashboardSidebar() {
                     </div>
                     <div className="overflow-hidden">
                       <p className="text-sm font-medium truncate">{user.email}</p>
-                      <p className="text-xs text-muted-foreground">Free Plan</p>
+                      <p className="text-xs text-muted-foreground capitalize">{subscriptionTier} Plan</p>
                     </div>
                   </div>
                 </div>

@@ -7,6 +7,7 @@ import { useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useStatsSubscription } from "@/hooks/useStatsSubscription";
 import { useToast } from "@/hooks/use-toast";
+import { PremiumGate } from "@/components/PremiumGate";
 
 const plans = [
   { name: "Basic", speed: 10, price: 30, recommended: false },
@@ -45,7 +46,7 @@ export const SubscriptionOptimizer = () => {
   const needsUpgrade = utilizationPercentage > 80;
   const underutilized = utilizationPercentage < 50;
 
-  return (
+  const optimizerContent = (
     <Card>
       <CardHeader>
         <CardTitle>Subscription Optimizer</CardTitle>
@@ -70,7 +71,6 @@ export const SubscriptionOptimizer = () => {
                 <Tooltip 
                   content={({ active, payload }) => {
                     if (active && payload && payload.length) {
-                      // Return as a string instead of JSX to fix type error
                       return (
                         <div className="border border-muted bg-popover p-2 text-popover-foreground shadow-md">
                           <div className="flex flex-col gap-0.5">
@@ -141,5 +141,15 @@ export const SubscriptionOptimizer = () => {
         </div>
       </CardContent>
     </Card>
+  );
+
+  return (
+    <PremiumGate 
+      feature="Bandwidth Optimization" 
+      description="Optimize your internet plan based on usage patterns with Premium subscription."
+      requiredTier="premium"
+    >
+      {optimizerContent}
+    </PremiumGate>
   );
 };
