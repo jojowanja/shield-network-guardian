@@ -1,6 +1,6 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { createClient, Session, User } from "@supabase/supabase-js";
-import { useNavigate } from "react-router-dom";
 
 // Initialize Supabase client with fallback values for development
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-supabase-project-url.supabase.co';
@@ -61,7 +61,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
 
   // Demo mode
   const isDemo = !supabase;
@@ -71,9 +70,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       setIsLoading(true);
       if (isDemo) {
-        setUser(mockUser as User);
-        setSession(mockSession as Session);
-        // Don't navigate here, let AuthForm handle it
+        // In demo mode, clear user first then set after a brief delay to simulate auth
+        setUser(null);
+        setSession(null);
+        setTimeout(() => {
+          setUser(mockUser as User);
+          setSession(mockSession as Session);
+          setIsLoading(false);
+        }, 500);
         return;
       }
       const { data, error } = await supabase!.auth.signInWithPassword({
@@ -83,12 +87,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (error) throw error;
       setUser(data.user);
       setSession(data.session);
-      // Don't navigate here, let AuthForm handle it
     } catch (error) {
       console.error("Error signing in:", error);
       throw error;
     } finally {
-      setIsLoading(false);
+      if (!isDemo) {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -96,10 +101,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const refreshSession = async () => {
     try {
       if (isDemo) {
-        // In demo mode, use mock data
-        console.info("Running in demo mode with mock user");
-        setUser(mockUser as User);
-        setSession(mockSession as Session);
+        // In demo mode, start with no user to force login
+        console.info("Running in demo mode - user must authenticate");
+        setUser(null);
+        setSession(null);
         setIsLoading(false);
         return;
       }
@@ -125,7 +130,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // In demo mode, just clear state
         setSession(null);
         setUser(null);
-        navigate("/auth");
         return;
       }
 
@@ -134,7 +138,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       setSession(null);
       setUser(null);
-      navigate("/auth");
     } catch (error) {
       console.error("Error signing out:", error);
     }
