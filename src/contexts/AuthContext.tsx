@@ -73,7 +73,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (isDemo) {
         setUser(mockUser as User);
         setSession(mockSession as Session);
-        navigate("/"); // Only navigate here on successful demo login
+        // Don't navigate here, let AuthForm handle it
         return;
       }
       const { data, error } = await supabase!.auth.signInWithPassword({
@@ -83,10 +83,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (error) throw error;
       setUser(data.user);
       setSession(data.session);
-      navigate("/"); // Only navigate here on successful login
+      // Don't navigate here, let AuthForm handle it
     } catch (error) {
       console.error("Error signing in:", error);
-      // Don't navigate here
       throw error;
     } finally {
       setIsLoading(false);

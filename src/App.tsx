@@ -18,9 +18,11 @@ import ExportPage from "./pages/ExportPage";
 import SecurityPage from "./pages/SecurityPage";
 import GuestAccessPage from "./pages/GuestAccessPage";
 import SubscriptionPage from "./pages/SubscriptionPage";
+import WelcomePage from "./pages/WelcomePage";
 import { AuthProvider } from "./contexts/AuthContext";
 import { SubscriptionProvider } from "./contexts/SubscriptionContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { AuthGate } from "./components/AuthGate";
 
 const queryClient = new QueryClient();
 
@@ -32,54 +34,77 @@ const App = () => (
           <TooltipProvider>
             <Toaster />
             <Sonner />
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<AuthPage />} />
-              <Route path="/subscription" element={<SubscriptionPage />} />
-              
-              {/* Protected Routes */}
-              <Route path="/pulse" element={
-                <ProtectedRoute>
-                  <PulsePage />
-                </ProtectedRoute>
-              } />
-              <Route path="/connect" element={
-                <ProtectedRoute>
-                  <ConnectPage />
-                </ProtectedRoute>
-              } />
-              <Route path="/devices" element={
-                <ProtectedRoute>
-                  <DevicesPage />
-                </ProtectedRoute>
-              } />
-              <Route path="/overview" element={
-                <ProtectedRoute>
-                  <OverviewPage />
-                </ProtectedRoute>
-              } />
-              <Route path="/settings" element={
-                <ProtectedRoute>
-                  <SettingsPage />
-                </ProtectedRoute>
-              } />
-              <Route path="/security" element={
-                <ProtectedRoute>
-                  <SecurityPage />
-                </ProtectedRoute>
-              } />
-              <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/analytics" element={<AnalyticsPage />} />
-              <Route path="/export" element={<ExportPage />} />
-              <Route path="/guest-access" element={
-                <ProtectedRoute>
-                  <GuestAccessPage />
-                </ProtectedRoute>
-              } />
-              
-              {/* Catch-all route */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <AuthGate>
+              <Routes>
+                <Route path="/auth" element={<AuthPage />} />
+                <Route path="/welcome" element={<WelcomePage />} />
+                
+                {/* Protected Routes */}
+                <Route path="/" element={
+                  <ProtectedRoute>
+                    <Index />
+                  </ProtectedRoute>
+                } />
+                <Route path="/pulse" element={
+                  <ProtectedRoute>
+                    <PulsePage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/connect" element={
+                  <ProtectedRoute>
+                    <ConnectPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/devices" element={
+                  <ProtectedRoute>
+                    <DevicesPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/overview" element={
+                  <ProtectedRoute>
+                    <OverviewPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/settings" element={
+                  <ProtectedRoute>
+                    <SettingsPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/security" element={
+                  <ProtectedRoute>
+                    <SecurityPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/profile" element={
+                  <ProtectedRoute>
+                    <ProfilePage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/analytics" element={
+                  <ProtectedRoute>
+                    <AnalyticsPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/export" element={
+                  <ProtectedRoute>
+                    <ExportPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/guest-access" element={
+                  <ProtectedRoute>
+                    <GuestAccessPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/subscription" element={
+                  <ProtectedRoute>
+                    <SubscriptionPage />
+                  </ProtectedRoute>
+                } />
+                
+                {/* Catch-all route */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </AuthGate>
           </TooltipProvider>
         </SubscriptionProvider>
       </AuthProvider>

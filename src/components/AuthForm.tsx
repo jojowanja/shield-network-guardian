@@ -26,7 +26,7 @@ export const AuthForm = () => {
         title: "Login successful",
         description: "Welcome back to Shield!",
       });
-      // No need to navigate here; redirect is handled in AuthContext
+      navigate("/welcome");
     } catch (error) {
       console.error("Login error:", error);
       toast({
@@ -39,84 +39,114 @@ export const AuthForm = () => {
     }
   };
 
-  // If user is already logged in, redirect to home
+  // If user is already logged in, redirect to welcome
   if (user) {
-    navigate("/");
+    navigate("/welcome");
     return null;
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Authentication</CardTitle>
-          <CardDescription>Secure access to your Shield dashboard</CardDescription>
-        </CardHeader>
-        <Tabs defaultValue="login" className="w-full">
-          <TabsList className="grid grid-cols-2 w-full">
-            <TabsTrigger value="login">Login</TabsTrigger>
-            <TabsTrigger value="register">Register</TabsTrigger>
-          </TabsList>
-          <TabsContent value="login">
-            <form onSubmit={handleSubmit}>
-              <CardContent className="space-y-4 pt-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="password">Password</Label>
-                    <a href="#" className="text-sm text-blue-600 hover:underline">
-                      Forgot password?
-                    </a>
-                  </div>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button type="submit" className="w-full" disabled={isFormLoading}>
-                  {isFormLoading ? "Logging in..." : "Login"}
-                </Button>
-              </CardFooter>
-            </form>
-          </TabsContent>
-          <TabsContent value="register">
+    <Card className="w-full backdrop-blur-sm bg-white/10 border-white/20 shadow-2xl">
+      <CardHeader className="text-center">
+        <CardTitle className="text-2xl text-white">Secure Access</CardTitle>
+        <CardDescription className="text-blue-200">
+          Authenticate to access your Shield dashboard
+        </CardDescription>
+      </CardHeader>
+      <Tabs defaultValue="login" className="w-full">
+        <TabsList className="grid grid-cols-2 w-full bg-white/10 border-white/20">
+          <TabsTrigger value="login" className="data-[state=active]:bg-white/20 data-[state=active]:text-white text-blue-200">
+            Login
+          </TabsTrigger>
+          <TabsTrigger value="register" className="data-[state=active]:bg-white/20 data-[state=active]:text-white text-blue-200">
+            Register
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="login">
+          <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4 pt-4">
               <div className="space-y-2">
-                <Label htmlFor="signup-email">Email</Label>
-                <Input id="signup-email" type="email" placeholder="you@example.com" required />
+                <Label htmlFor="email" className="text-white">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="bg-white/10 border-white/20 text-white placeholder:text-blue-200 focus:border-blue-400"
+                />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="signup-password">Password</Label>
-                <Input id="signup-password" type="password" required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirm-password">Confirm Password</Label>
-                <Input id="confirm-password" type="password" required />
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password" className="text-white">Password</Label>
+                  <a href="#" className="text-sm text-blue-300 hover:text-blue-200 hover:underline">
+                    Forgot password?
+                  </a>
+                </div>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="bg-white/10 border-white/20 text-white placeholder:text-blue-200 focus:border-blue-400"
+                />
               </div>
             </CardContent>
             <CardFooter>
-              <Button type="submit" className="w-full" disabled={isFormLoading}>
-                {isFormLoading ? "Creating Account..." : "Create Account"}
+              <Button 
+                type="submit" 
+                className="w-full bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white shadow-lg" 
+                disabled={isFormLoading}
+              >
+                {isFormLoading ? "Authenticating..." : "Secure Login"}
               </Button>
             </CardFooter>
-          </TabsContent>
-        </Tabs>
-      </Card>
-    </div>
+          </form>
+        </TabsContent>
+        <TabsContent value="register">
+          <CardContent className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label htmlFor="signup-email" className="text-white">Email</Label>
+              <Input 
+                id="signup-email" 
+                type="email" 
+                placeholder="you@example.com" 
+                required 
+                className="bg-white/10 border-white/20 text-white placeholder:text-blue-200 focus:border-blue-400"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="signup-password" className="text-white">Password</Label>
+              <Input 
+                id="signup-password" 
+                type="password" 
+                required 
+                className="bg-white/10 border-white/20 text-white placeholder:text-blue-200 focus:border-blue-400"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm-password" className="text-white">Confirm Password</Label>
+              <Input 
+                id="confirm-password" 
+                type="password" 
+                required 
+                className="bg-white/10 border-white/20 text-white placeholder:text-blue-200 focus:border-blue-400"
+              />
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button 
+              type="submit" 
+              className="w-full bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white shadow-lg" 
+              disabled={isFormLoading}
+            >
+              {isFormLoading ? "Creating Account..." : "Create Secure Account"}
+            </Button>
+          </CardFooter>
+        </TabsContent>
+      </Tabs>
+    </Card>
   );
 };
