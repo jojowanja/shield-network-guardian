@@ -1,4 +1,3 @@
-
 import { ReactNode, useState } from "react";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { Bell, Search, User, ChartBar, FileText, Menu } from "lucide-react";
@@ -11,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Link, useNavigate } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useRealtimeToasts } from "@/hooks/useRealtimeToasts";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -22,6 +22,9 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const navigate = useNavigate();
   
   const isMobile = useIsMobile();
+  
+  // Initialize real-time toasts
+  useRealtimeToasts();
 
   const handleSignOut = () => {
     signOut();

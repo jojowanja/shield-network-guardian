@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -7,8 +6,16 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Settings, Shield, Bell, Lock, Database, Clock, CheckCircle } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { useTheme } from "@/hooks/useTheme";
+import { toast } from "sonner";
 
 const SettingsPage = () => {
+  const { theme, toggleTheme } = useTheme();
+
+  const handleSaveChanges = () => {
+    toast.success("Settings saved successfully!");
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -64,7 +71,10 @@ const SettingsPage = () => {
                         <p className="font-medium">Dark Mode</p>
                         <p className="text-sm text-muted-foreground">Use dark theme</p>
                       </div>
-                      <Switch />
+                      <Switch 
+                        checked={theme === "dark"} 
+                        onCheckedChange={toggleTheme}
+                      />
                     </div>
                     <div className="flex items-center justify-between">
                       <div>
@@ -78,7 +88,12 @@ const SettingsPage = () => {
                 
                 <div className="flex items-center justify-end gap-3 pt-2">
                   <Button variant="outline">Reset</Button>
-                  <Button className="bg-shield hover:bg-shield-secondary">Save Changes</Button>
+                  <Button 
+                    className="bg-shield hover:bg-shield-secondary"
+                    onClick={handleSaveChanges}
+                  >
+                    Save Changes
+                  </Button>
                 </div>
               </CardContent>
             </Card>
