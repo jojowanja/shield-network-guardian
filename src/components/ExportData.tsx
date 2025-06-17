@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,10 +7,36 @@ import { FileText, Download } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
+
+// Define the downloadItem interface for type safety
+interface DownloadItem {
+  id: string;
+  filename: string;
+  type: "report" | "config" | "log";
+  size: string;
+  progress: number;
+  status: "downloading" | "completed" | "failed";
+  timestamp: Date;
+}
+
+// Global downloads state - in a real app this would be in a context or store
+let globalDownloads: DownloadItem[] = [];
+let downloadListeners: ((downloads: DownloadItem[]) => void)[] = [];
+
+const addDownload = (download: DownloadItem) => {
+  globalDownloads = [download, ...globalDownloads];
+  downloadListeners.forEach(listener => listener(globalDownloads));
+};
+
+const updateDownload = (id: string, updates: Partial<DownloadItem>) => {
+  globalDownloads = globalDownloads.map(download => 
+    download.id === id ? { ...download, ...updates } : download
+  );
+  downloadListeners.forEach(listener => listener(globalDownloads));
+};
 
 export const ExportData = () => {
-  const { toast } = useToast();
   const [exportFormat, setExportFormat] = useState<'csv' | 'pdf' | 'json'>('csv');
   const [timeRange, setTimeRange] = useState('7d');
   const [selectedData, setSelectedData] = useState({
@@ -18,6 +45,7 @@ export const ExportData = () => {
     securityEvents: false,
     optimizations: false
   });
+  const [isExporting, setIsExporting] = useState(false);
 
   const handleCheckboxChange = (field: keyof typeof selectedData) => {
     setSelectedData(prev => ({
@@ -26,25 +54,80 @@ export const ExportData = () => {
     }));
   };
 
+  const simulateExportDownload = (filename: string, type: DownloadItem["type"]) => {
+    const newDownload: DownloadItem = {
+      id: Date.now().toString(),
+      filename,
+      type,
+      size: `${Math.floor(Math.random() * 5000) + 500}KB`,
+      progress: 0,
+      status: "downloading",
+      timestamp: new Date(),
+    };
+
+    addDownload(newDownload);
+    toast.success(`Started exporting ${filename}`);
+
+    // Simulate export progress
+    const interval = setInterval(() => {
+      const currentDownload = globalDownloads.find(d => d.id === newDownload.id);
+      if (currentDownload && currentDownload.status === "downloading") {
+        const newProgress = Math.min(currentDownload.progress + Math.random() * 25, 100);
+        const newStatus = newProgress >= 100 ? "completed" : "downloading";
+        
+        updateDownload(newDownload.id, { progress: newProgress, status: newStatus });
+        
+        if (newStatus === "completed") {
+          toast.success(`${filename} exported successfully!`, {
+            description: "File is now available in Downloads section"
+          });
+        }
+      } else {
+        clearInterval(interval);
+      }
+    }, 600);
+
+    setTimeout(() => clearInterval(interval), 5000);
+  };
+
   const handleExport = () => {
-    // In a real application, this would trigger an actual export
     const dataTypes = Object.entries(selectedData)
       .filter(([_, isSelected]) => isSelected)
-      .map(([type]) => type)
-      .join(", ");
+      .map(([type]) => type);
     
-    toast({
-      title: "Export Started",
-      description: `Your ${dataTypes} data is being exported in ${exportFormat.toUpperCase()} format.`,
-    });
+    if (dataTypes.length === 0) {
+      toast.error("Please select at least one data type to export");
+      return;
+    }
+
+    setIsExporting(true);
     
-    // Simulate download after a delay
+    // Generate filename based on selected data and format
+    const dataTypeString = dataTypes.join("-");
+    const timeRangeString = timeRange === '1d' ? 'daily' : 
+                           timeRange === '7d' ? 'weekly' : 
+                           timeRange === '30d' ? 'monthly' : 'quarterly';
+    
+    const filename = `${dataTypeString}-${timeRangeString}-report.${exportFormat}`;
+    const fileType = exportFormat === 'pdf' ? 'report' : 
+                     exportFormat === 'json' ? 'config' : 'log';
+
+    // Start the real-time download
+    simulateExportDownload(filename, fileType);
+    
     setTimeout(() => {
-      toast({
-        title: "Export Completed",
-        description: "Your data has been exported successfully.",
-      });
-    }, 1500);
+      setIsExporting(false);
+    }, 1000);
+  };
+
+  const handleQuickExport = () => {
+    setIsExporting(true);
+    const filename = `network-summary-${new Date().toISOString().split('T')[0]}.${exportFormat}`;
+    simulateExportDownload(filename, "report");
+    
+    setTimeout(() => {
+      setIsExporting(false);
+    }, 1000);
   };
 
   return (
@@ -54,9 +137,14 @@ export const ExportData = () => {
         <span className="text-sm font-medium">
           Export your logs or usage as <span className="underline">PDF or CSV</span> with a single click!
         </span>
-        <Button size="sm" variant="secondary" onClick={handleExport}>
+        <Button 
+          size="sm" 
+          variant="secondary" 
+          onClick={handleQuickExport}
+          disabled={isExporting}
+        >
           <Download className="mr-2 h-4 w-4" />
-          Quick Export
+          {isExporting ? "Exporting..." : "Quick Export"}
         </Button>
       </div>
       <Tabs defaultValue="export" className="w-full">
@@ -69,7 +157,7 @@ export const ExportData = () => {
           <Card>
             <CardHeader>
               <CardTitle className="text-xl font-semibold">Export Network Data</CardTitle>
-              <CardDescription>Select data types and format for export</CardDescription>
+              <CardDescription>Select data types and format for export - files will appear in Downloads</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
@@ -148,9 +236,13 @@ export const ExportData = () => {
                 </div>
 
                 <div className="flex justify-end">
-                  <Button onClick={handleExport} className="w-full md:w-auto">
+                  <Button 
+                    onClick={handleExport} 
+                    className="w-full md:w-auto"
+                    disabled={isExporting}
+                  >
                     <Download className="mr-2 h-4 w-4" />
-                    Export Data
+                    {isExporting ? "Starting Export..." : "Export Data"}
                   </Button>
                 </div>
               </div>
@@ -162,7 +254,7 @@ export const ExportData = () => {
           <Card>
             <CardHeader>
               <CardTitle className="text-xl font-semibold">Export History</CardTitle>
-              <CardDescription>Your previous exports</CardDescription>
+              <CardDescription>Your previous exports - check Downloads section for active downloads</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
