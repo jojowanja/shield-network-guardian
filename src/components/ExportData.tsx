@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -46,6 +45,24 @@ export const ExportData = () => {
     optimizations: false
   });
   const [isExporting, setIsExporting] = useState(false);
+  const [downloads, setDownloads] = useState<DownloadItem[]>([]);
+
+  // Subscribe to downloads updates
+  useEffect(() => {
+    const listener = (updatedDownloads: DownloadItem[]) => {
+      setDownloads(updatedDownloads);
+    };
+    
+    downloadListeners.push(listener);
+    setDownloads(globalDownloads); // Set initial state
+    
+    return () => {
+      const index = downloadListeners.indexOf(listener);
+      if (index > -1) {
+        downloadListeners.splice(index, 1);
+      }
+    };
+  }, []);
 
   const handleCheckboxChange = (field: keyof typeof selectedData) => {
     setSelectedData(prev => ({
@@ -88,6 +105,40 @@ export const ExportData = () => {
     }, 600);
 
     setTimeout(() => clearInterval(interval), 5000);
+  };
+
+  const handleDownloadFile = (download: DownloadItem) => {
+    if (download.status === "completed") {
+      // Simulate file download
+      const blob = new Blob([`Mock ${download.type} data for ${download.filename}`], { type: 'text/plain' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = download.filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast.success(`Downloaded ${download.filename}`);
+    } else if (download.status === "downloading") {
+      toast.info("File is still being processed. Please wait...");
+    } else {
+      toast.error("Download failed. Please try exporting again.");
+    }
+  };
+
+  const getFileIcon = (type: string, filename: string) => {
+    if (filename.includes('.pdf')) return <FileText className="h-8 w-8 mr-3 text-red-500" />;
+    if (filename.includes('.csv')) return <FileText className="h-8 w-8 mr-3 text-green-500" />;
+    if (filename.includes('.json')) return <FileText className="h-8 w-8 mr-3 text-blue-500" />;
+    
+    switch (type) {
+      case "report": return <FileText className="h-8 w-8 mr-3 text-blue-500" />;
+      case "config": return <FileText className="h-8 w-8 mr-3 text-green-500" />;
+      case "log": return <FileText className="h-8 w-8 mr-3 text-orange-500" />;
+      default: return <FileText className="h-8 w-8 mr-3 text-gray-500" />;
+    }
   };
 
   const handleExport = () => {
@@ -254,48 +305,42 @@ export const ExportData = () => {
           <Card>
             <CardHeader>
               <CardTitle className="text-xl font-semibold">Export History</CardTitle>
-              <CardDescription>Your previous exports - check Downloads section for active downloads</CardDescription>
+              <CardDescription>Your exported files - completed exports can be downloaded</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="rounded-md border border-border p-4 flex flex-col md:flex-row md:items-center justify-between">
-                  <div className="flex items-center">
-                    <FileText className="h-8 w-8 mr-3 text-blue-500" />
-                    <div>
-                      <div className="font-medium">Network Speed Data</div>
-                      <div className="text-sm text-muted-foreground">CSV • 245 KB • April 18, 2025</div>
-                    </div>
+                {downloads.filter(download => download.status === "completed").length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <FileText className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+                    <p className="text-lg font-medium">No completed exports yet</p>
+                    <p className="text-sm">Export some data to see your download history here</p>
                   </div>
-                  <Button variant="outline" size="sm" className="mt-3 md:mt-0">
-                    Download
-                  </Button>
-                </div>
-                
-                <div className="rounded-md border border-border p-4 flex flex-col md:flex-row md:items-center justify-between">
-                  <div className="flex items-center">
-                    <FileText className="h-8 w-8 mr-3 text-red-500" />
-                    <div>
-                      <div className="font-medium">Monthly Network Report</div>
-                      <div className="text-sm text-muted-foreground">PDF • 1.2 MB • April 15, 2025</div>
-                    </div>
-                  </div>
-                  <Button variant="outline" size="sm" className="mt-3 md:mt-0">
-                    Download
-                  </Button>
-                </div>
-                
-                <div className="rounded-md border border-border p-4 flex flex-col md:flex-row md:items-center justify-between">
-                  <div className="flex items-center">
-                    <FileText className="h-8 w-8 mr-3 text-green-500" />
-                    <div>
-                      <div className="font-medium">Device Activity Log</div>
-                      <div className="text-sm text-muted-foreground">JSON • 320 KB • April 12, 2025</div>
-                    </div>
-                  </div>
-                  <Button variant="outline" size="sm" className="mt-3 md:mt-0">
-                    Download
-                  </Button>
-                </div>
+                ) : (
+                  downloads
+                    .filter(download => download.status === "completed")
+                    .map((download) => (
+                      <div key={download.id} className="rounded-md border border-border p-4 flex flex-col md:flex-row md:items-center justify-between animate-fade-in">
+                        <div className="flex items-center">
+                          {getFileIcon(download.type, download.filename)}
+                          <div>
+                            <div className="font-medium">{download.filename}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {download.type.toUpperCase()} • {download.size} • {download.timestamp.toLocaleDateString()}
+                            </div>
+                          </div>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="mt-3 md:mt-0"
+                          onClick={() => handleDownloadFile(download)}
+                        >
+                          <Download className="mr-2 h-4 w-4" />
+                          Download
+                        </Button>
+                      </div>
+                    ))
+                )}
               </div>
             </CardContent>
           </Card>
