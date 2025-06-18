@@ -35,6 +35,118 @@ const updateDownload = (id: string, updates: Partial<DownloadItem>) => {
   downloadListeners.forEach(listener => listener(globalDownloads));
 };
 
+// Helper function to generate proper file content based on format
+const generateFileContent = (filename: string, format: string, selectedData: any, timeRange: string) => {
+  const timestamp = new Date().toISOString();
+  const dataTypes = Object.entries(selectedData)
+    .filter(([_, isSelected]) => isSelected)
+    .map(([type]) => type);
+
+  if (format === 'csv') {
+    const csvContent = [
+      'Timestamp,Data Type,Value,Unit',
+      `${timestamp},Network Speed,${Math.floor(Math.random() * 100) + 50},Mbps`,
+      `${timestamp},Device Count,${Math.floor(Math.random() * 10) + 5},devices`,
+      `${timestamp},Security Events,${Math.floor(Math.random() * 5)},events`,
+      `${timestamp},Optimization Score,${Math.floor(Math.random() * 40) + 60},%`
+    ].join('\n');
+    return new Blob([csvContent], { type: 'text/csv' });
+  }
+
+  if (format === 'json') {
+    const jsonContent = {
+      exportTimestamp: timestamp,
+      timeRange,
+      selectedData: dataTypes,
+      networkData: {
+        downloadSpeed: Math.floor(Math.random() * 100) + 50,
+        uploadSpeed: Math.floor(Math.random() * 50) + 20,
+        ping: Math.floor(Math.random() * 30) + 10,
+        connectedDevices: Math.floor(Math.random() * 10) + 5
+      },
+      securityEvents: Array.from({ length: 3 }, (_, i) => ({
+        timestamp: new Date(Date.now() - i * 3600000).toISOString(),
+        type: ['login_attempt', 'device_connected', 'security_scan'][i % 3],
+        severity: ['low', 'medium', 'high'][Math.floor(Math.random() * 3)]
+      }))
+    };
+    return new Blob([JSON.stringify(jsonContent, null, 2)], { type: 'application/json' });
+  }
+
+  if (format === 'pdf') {
+    // Create a simple PDF-like content using text that represents PDF structure
+    const pdfContent = `%PDF-1.4
+1 0 obj
+<<
+/Type /Catalog
+/Pages 2 0 R
+>>
+endobj
+
+2 0 obj
+<<
+/Type /Pages
+/Kids [3 0 R]
+/Count 1
+>>
+endobj
+
+3 0 obj
+<<
+/Type /Page
+/Parent 2 0 R
+/MediaBox [0 0 612 792]
+/Contents 4 0 R
+>>
+endobj
+
+4 0 obj
+<<
+/Length 200
+>>
+stream
+BT
+/F1 12 Tf
+72 720 Td
+(Network Export Report) Tj
+0 -20 Td
+(Generated: ${timestamp}) Tj
+0 -20 Td
+(Time Range: ${timeRange}) Tj
+0 -20 Td
+(Data Types: ${dataTypes.join(', ')}) Tj
+0 -40 Td
+(Download Speed: ${Math.floor(Math.random() * 100) + 50} Mbps) Tj
+0 -20 Td
+(Upload Speed: ${Math.floor(Math.random() * 50) + 20} Mbps) Tj
+0 -20 Td
+(Connected Devices: ${Math.floor(Math.random() * 10) + 5}) Tj
+ET
+endstream
+endobj
+
+xref
+0 5
+0000000000 65535 f 
+0000000010 00000 n 
+0000000053 00000 n 
+0000000125 00000 n 
+0000000209 00000 n 
+trailer
+<<
+/Size 5
+/Root 1 0 R
+>>
+startxref
+500
+%%EOF`;
+    return new Blob([pdfContent], { type: 'application/pdf' });
+  }
+
+  // Fallback to text
+  return new Blob([`Export data for ${filename}\nGenerated: ${timestamp}`], { type: 'text/plain' });
+};
+
 export const ExportData = () => {
   const [exportFormat, setExportFormat] = useState<'csv' | 'pdf' | 'json'>('csv');
   const [timeRange, setTimeRange] = useState('7d');
@@ -109,8 +221,11 @@ export const ExportData = () => {
 
   const handleDownloadFile = (download: DownloadItem) => {
     if (download.status === "completed") {
-      // Simulate file download
-      const blob = new Blob([`Mock ${download.type} data for ${download.filename}`], { type: 'text/plain' });
+      // Generate proper file content based on the file type
+      const fileExtension = download.filename.split('.').pop()?.toLowerCase();
+      const format = fileExtension === 'pdf' ? 'pdf' : fileExtension === 'json' ? 'json' : 'csv';
+      
+      const blob = generateFileContent(download.filename, format, selectedData, timeRange);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;

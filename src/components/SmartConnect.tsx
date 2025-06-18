@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Wifi, WifiOff, Router, Fingerprint, Eye, EyeOff, Zap } from "lucide-react";
+import { Wifi, WifiOff, Router, Fingerprint, Eye, EyeOff, Zap, RotateCcw } from "lucide-react";
 import { useNetworkStats } from "@/hooks/useNetworkStats";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
@@ -16,6 +16,7 @@ export const SmartConnect = () => {
   const [guestNetworkEnabled, setGuestNetworkEnabled] = useState(true);
   const [showGuestPassword, setShowGuestPassword] = useState(false);
   const [isTestingSpeed, setIsTestingSpeed] = useState(false);
+  const [isRestartingNetwork, setIsRestartingNetwork] = useState(false);
   const { stats, updateStats } = useNetworkStats();
   const { toast } = useToast();
 
@@ -45,6 +46,26 @@ export const SmartConnect = () => {
       title: "Speed Test Complete",
       description: `Download: ${stats.downloadSpeed.toFixed(1)} Mbps, Upload: ${stats.uploadSpeed.toFixed(1)} Mbps, Ping: ${stats.ping.toFixed(0)} ms`,
     });
+  };
+
+  const handleRestartNetwork = async () => {
+    setIsRestartingNetwork(true);
+    
+    toast({
+      title: "Network Restart Initiated",
+      description: "Restarting network components...",
+    });
+
+    // Simulate network restart process
+    setTimeout(() => {
+      toast({
+        title: "Network Restarted Successfully",
+        description: "All network components have been restarted and are back online",
+      });
+      setIsRestartingNetwork(false);
+      // Trigger a speed test after restart to refresh stats
+      updateStats();
+    }, 5000);
   };
 
   return (
@@ -185,7 +206,25 @@ export const SmartConnect = () => {
                       </>
                     )}
                   </Button>
-                  <Button size="sm" variant="outline" className="w-full">Restart Network</Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={handleRestartNetwork}
+                    disabled={isRestartingNetwork}
+                  >
+                    {isRestartingNetwork ? (
+                      <>
+                        <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                        Restarting...
+                      </>
+                    ) : (
+                      <>
+                        <RotateCcw className="mr-2 h-4 w-4" />
+                        Restart Network
+                      </>
+                    )}
+                  </Button>
                 </div>
               </CardContent>
             </Card>
