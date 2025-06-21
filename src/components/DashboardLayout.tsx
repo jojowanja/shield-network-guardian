@@ -1,6 +1,5 @@
 
 import { ReactNode, useState } from "react";
-import DashboardSidebar from "@/components/DashboardSidebar";
 import { Bell, Search, User, ChartBar, FileText, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +11,21 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Link, useNavigate } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useRealtimeToasts } from "@/hooks/useRealtimeToasts";
+import {
+  Home,
+  Shield,
+  Wifi,
+  MonitorSpeaker,
+  Users,
+  ShieldCheck,
+  BarChart3,
+  FileDown,
+  Settings,
+  CreditCard,
+  Activity,
+} from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -21,28 +35,147 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const [isSigningOut, setIsSigningOut] = useState(false);
   
   const isMobile = useIsMobile();
   
   // Initialize real-time toasts
   useRealtimeToasts();
 
-  const handleSignOut = () => {
-    signOut();
-    navigate('/auth');
+  const handleSignOut = async () => {
+    setIsSigningOut(true);
+    try {
+      await signOut();
+      navigate('/auth');
+    } catch (error) {
+      console.error("Sign out failed:", error);
+    } finally {
+      setIsSigningOut(false);
+    }
   };
+
+  const menuItems = [
+    { icon: Home, label: "Overview", path: "/" },
+    { icon: Shield, label: "Pulse", path: "/pulse" },
+    { icon: Wifi, label: "Connect", path: "/connect" },
+    { icon: MonitorSpeaker, label: "Devices", path: "/devices" },
+    { icon: Users, label: "Guest Access", path: "/guest-access" },
+    { icon: ShieldCheck, label: "Security", path: "/security" },
+    { icon: BarChart3, label: "Analytics", path: "/analytics" },
+    { icon: Activity, label: "Interactive", path: "/interactive" },
+    { icon: FileDown, label: "Export", path: "/export" },
+    { icon: Settings, label: "Settings", path: "/settings" },
+    { icon: CreditCard, label: "Subscription", path: "/subscription" },
+  ];
 
   return (
     <div className="flex flex-col h-screen max-h-screen w-full overflow-hidden bg-gray-50 dark:bg-background">
       <div className="flex flex-1 overflow-hidden w-full">
-        {/* Desktop sidebar - only show when not mobile */}
-        {!isMobile && <DashboardSidebar isOpen={false} onClose={() => {}} />}
+        {/* Desktop sidebar */}
+        {!isMobile && (
+          <div className="w-64 bg-white dark:bg-card border-r border-border flex flex-col">
+            <div className="px-6 py-4 border-b">
+              <h2 className="text-lg font-semibold">Dashboard</h2>
+              <p className="text-sm text-muted-foreground">
+                Manage your network and connected devices.
+              </p>
+            </div>
+            
+            <div className="flex flex-col gap-1 px-3 py-4 flex-1">
+              {menuItems.map((item) => (
+                <Button
+                  key={item.label}
+                  variant="ghost"
+                  className="justify-start px-4 py-2 rounded-md hover:bg-secondary"
+                  onClick={() => navigate(item.path)}
+                >
+                  <item.icon className="w-4 h-4 mr-2" />
+                  {item.label}
+                </Button>
+              ))}
+            </div>
+
+            <div className="mt-auto px-6 border-t py-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <Avatar className="w-8 h-8">
+                    <AvatarImage src={user?.user_metadata?.avatar_url} />
+                    <AvatarFallback>{user?.email?.charAt(0).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col">
+                    <span className="font-medium text-sm">{user?.user_metadata?.full_name || user?.email?.split('@')[0]}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {user?.email}
+                    </span>
+                  </div>
+                </div>
+                <ThemeToggle />
+              </div>
+              <Button
+                variant="outline"
+                className={cn("w-full justify-center", isSigningOut && "opacity-50")}
+                disabled={isSigningOut}
+                onClick={handleSignOut}
+              >
+                {isSigningOut ? "Signing Out..." : "Sign Out"}
+              </Button>
+            </div>
+          </div>
+        )}
         
         {/* Mobile sidebar - use Sheet component for slide-over menu */}
         {isMobile && (
           <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
             <SheetContent side="left" className="p-0 w-[85%] max-w-[300px] sm:w-[350px]">
-              <DashboardSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+              <div className="px-6 py-4 border-b">
+                <h2 className="text-lg font-semibold">Dashboard</h2>
+                <p className="text-sm text-muted-foreground">
+                  Manage your network and connected devices.
+                </p>
+              </div>
+              
+              <div className="flex flex-col gap-1 px-3 py-4 flex-1">
+                {menuItems.map((item) => (
+                  <Button
+                    key={item.label}
+                    variant="ghost"
+                    className="justify-start px-4 py-2 rounded-md hover:bg-secondary"
+                    onClick={() => {
+                      navigate(item.path);
+                      setSidebarOpen(false);
+                    }}
+                  >
+                    <item.icon className="w-4 h-4 mr-2" />
+                    {item.label}
+                  </Button>
+                ))}
+              </div>
+
+              <div className="mt-auto px-6 border-t py-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="w-8 h-8">
+                      <AvatarImage src={user?.user_metadata?.avatar_url} />
+                      <AvatarFallback>{user?.email?.charAt(0).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col">
+                      <span className="font-medium text-sm">{user?.user_metadata?.full_name || user?.email?.split('@')[0]}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {user?.email}
+                      </span>
+                    </div>
+                  </div>
+                  <ThemeToggle />
+                </div>
+                <Button
+                  variant="outline"
+                  className={cn("w-full justify-center", isSigningOut && "opacity-50")}
+                  disabled={isSigningOut}
+                  onClick={handleSignOut}
+                >
+                  {isSigningOut ? "Signing Out..." : "Sign Out"}
+                </Button>
+              </div>
             </SheetContent>
           </Sheet>
         )}
