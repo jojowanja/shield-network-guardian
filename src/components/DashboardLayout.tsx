@@ -1,5 +1,6 @@
+
 import { ReactNode, useState } from "react";
-import { DashboardSidebar } from "@/components/DashboardSidebar";
+import DashboardSidebar from "@/components/DashboardSidebar";
 import { Bell, Search, User, ChartBar, FileText, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,13 +36,13 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     <div className="flex flex-col h-screen max-h-screen w-full overflow-hidden bg-gray-50 dark:bg-background">
       <div className="flex flex-1 overflow-hidden w-full">
         {/* Desktop sidebar - only show when not mobile */}
-        {!isMobile && <DashboardSidebar />}
+        {!isMobile && <DashboardSidebar isOpen={false} onClose={() => {}} />}
         
         {/* Mobile sidebar - use Sheet component for slide-over menu */}
         {isMobile && (
           <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
             <SheetContent side="left" className="p-0 w-[85%] max-w-[300px] sm:w-[350px]">
-              <DashboardSidebar />
+              <DashboardSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
             </SheetContent>
           </Sheet>
         )}

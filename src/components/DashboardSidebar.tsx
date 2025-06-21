@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import {
   Sheet,
@@ -58,7 +59,7 @@ const DashboardSidebar = ({ isOpen, onClose }: DashboardSidebarProps) => {
     { icon: Users, label: "Guest Access", path: "/guest-access" },
     { icon: ShieldCheck, label: "Security", path: "/security" },
     { icon: BarChart3, label: "Analytics", path: "/analytics" },
-    { icon: Activity, label: "Interactive", path: "/interactive" }, // New item
+    { icon: Activity, label: "Interactive", path: "/interactive" },
     { icon: FileDown, label: "Export", path: "/export" },
     { icon: Settings, label: "Settings", path: "/settings" },
     { icon: CreditCard, label: "Subscription", path: "/subscription" },
@@ -104,11 +105,11 @@ const DashboardSidebar = ({ isOpen, onClose }: DashboardSidebarProps) => {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
               <Avatar className="w-8 h-8">
-                <AvatarImage src={user?.image} />
-                <AvatarFallback>{user?.name?.charAt(0)}</AvatarFallback>
+                <AvatarImage src={user?.user_metadata?.avatar_url} />
+                <AvatarFallback>{user?.email?.charAt(0).toUpperCase()}</AvatarFallback>
               </Avatar>
               <div className="flex flex-col">
-                <span className="font-medium text-sm">{user?.name}</span>
+                <span className="font-medium text-sm">{user?.user_metadata?.full_name || user?.email?.split('@')[0]}</span>
                 <span className="text-xs text-muted-foreground">
                   {user?.email}
                 </span>

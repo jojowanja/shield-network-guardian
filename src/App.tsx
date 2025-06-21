@@ -1,7 +1,7 @@
+
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { QueryClient } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
-import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import Index from "./pages/Index";
@@ -15,38 +15,40 @@ import ExportPage from "./pages/ExportPage";
 import PulsePage from "./pages/PulsePage";
 import InteractivePage from "./pages/InteractivePage";
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
 function App() {
   return (
-    <QueryClient defaultOptions={{
-      queries: {
-        retry: 1,
-        refetchOnWindowFocus: false,
-      },
-    }}>
+    <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
           <SubscriptionProvider>
-            <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-              <div className="min-h-screen bg-background">
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/devices" element={<DevicesPage />} />
-                  <Route path="/guest-access" element={<GuestAccessPage />} />
-                  <Route path="/security" element={<SecurityPage />} />
-                  <Route path="/analytics" element={<AnalyticsPage />} />
-                  <Route path="/settings" element={<SettingsPage />} />
-                  <Route path="/subscription" element={<SubscriptionPage />} />
-                  <Route path="/export" element={<ExportPage />} />
-                  <Route path="/pulse" element={<PulsePage />} />
-                  <Route path="/interactive" element={<InteractivePage />} />
-                </Routes>
-                <Toaster />
-              </div>
-            </ThemeProvider>
+            <div className="min-h-screen bg-background">
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/devices" element={<DevicesPage />} />
+                <Route path="/guest-access" element={<GuestAccessPage />} />
+                <Route path="/security" element={<SecurityPage />} />
+                <Route path="/analytics" element={<AnalyticsPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/subscription" element={<SubscriptionPage />} />
+                <Route path="/export" element={<ExportPage />} />
+                <Route path="/pulse" element={<PulsePage />} />
+                <Route path="/interactive" element={<InteractivePage />} />
+              </Routes>
+              <Toaster />
+            </div>
           </SubscriptionProvider>
         </AuthProvider>
       </BrowserRouter>
-    </QueryClient>
+    </QueryClientProvider>
   );
 }
 
