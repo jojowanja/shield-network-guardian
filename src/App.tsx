@@ -1,115 +1,53 @@
-
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { QueryClient } from "@tanstack/react-query";
+import { Toaster } from "@/components/ui/toaster";
+import { ThemeProvider } from "@/components/theme-provider";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import PulsePage from "./pages/PulsePage";
-import ConnectPage from "./pages/ConnectPage";
 import DevicesPage from "./pages/DevicesPage";
-import AuthPage from "./pages/AuthPage";
-import OverviewPage from "./pages/OverviewPage";
-import SettingsPage from "./pages/SettingsPage";
-import ProfilePage from "./pages/ProfilePage";
-import AnalyticsPage from "./pages/AnalyticsPage";
-import ExportPage from "./pages/ExportPage";
-import SecurityPage from "./pages/SecurityPage";
 import GuestAccessPage from "./pages/GuestAccessPage";
+import SecurityPage from "./pages/SecurityPage";
+import AnalyticsPage from "./pages/AnalyticsPage";
+import SettingsPage from "./pages/SettingsPage";
 import SubscriptionPage from "./pages/SubscriptionPage";
-import WelcomePage from "./pages/WelcomePage";
-import { AuthProvider } from "./contexts/AuthContext";
-import { SubscriptionProvider } from "./contexts/SubscriptionContext";
-import { ProtectedRoute } from "./components/ProtectedRoute";
-import { AuthGate } from "./components/AuthGate";
+import ExportPage from "./pages/ExportPage";
+import PulsePage from "./pages/PulsePage";
+import InteractivePage from "./pages/InteractivePage";
 
-const queryClient = new QueryClient();
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <BrowserRouter>
-      <AuthProvider>
-        <SubscriptionProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <AuthGate>
-              <Routes>
-                <Route path="/auth" element={<AuthPage />} />
-                <Route path="/welcome" element={<WelcomePage />} />
-                
-                {/* Protected Routes */}
-                <Route path="/" element={
-                  <ProtectedRoute>
-                    <Index />
-                  </ProtectedRoute>
-                } />
-                <Route path="/pulse" element={
-                  <ProtectedRoute>
-                    <PulsePage />
-                  </ProtectedRoute>
-                } />
-                <Route path="/connect" element={
-                  <ProtectedRoute>
-                    <ConnectPage />
-                  </ProtectedRoute>
-                } />
-                <Route path="/devices" element={
-                  <ProtectedRoute>
-                    <DevicesPage />
-                  </ProtectedRoute>
-                } />
-                <Route path="/overview" element={
-                  <ProtectedRoute>
-                    <OverviewPage />
-                  </ProtectedRoute>
-                } />
-                <Route path="/settings" element={
-                  <ProtectedRoute>
-                    <SettingsPage />
-                  </ProtectedRoute>
-                } />
-                <Route path="/security" element={
-                  <ProtectedRoute>
-                    <SecurityPage />
-                  </ProtectedRoute>
-                } />
-                <Route path="/profile" element={
-                  <ProtectedRoute>
-                    <ProfilePage />
-                  </ProtectedRoute>
-                } />
-                <Route path="/analytics" element={
-                  <ProtectedRoute>
-                    <AnalyticsPage />
-                  </ProtectedRoute>
-                } />
-                <Route path="/export" element={
-                  <ProtectedRoute>
-                    <ExportPage />
-                  </ProtectedRoute>
-                } />
-                <Route path="/guest-access" element={
-                  <ProtectedRoute>
-                    <GuestAccessPage />
-                  </ProtectedRoute>
-                } />
-                <Route path="/subscription" element={
-                  <ProtectedRoute>
-                    <SubscriptionPage />
-                  </ProtectedRoute>
-                } />
-                
-                {/* Catch-all route */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </AuthGate>
-          </TooltipProvider>
-        </SubscriptionProvider>
-      </AuthProvider>
-    </BrowserRouter>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <QueryClient defaultOptions={{
+      queries: {
+        retry: 1,
+        refetchOnWindowFocus: false,
+      },
+    }}>
+      <BrowserRouter>
+        <AuthProvider>
+          <SubscriptionProvider>
+            <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+              <div className="min-h-screen bg-background">
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/devices" element={<DevicesPage />} />
+                  <Route path="/guest-access" element={<GuestAccessPage />} />
+                  <Route path="/security" element={<SecurityPage />} />
+                  <Route path="/analytics" element={<AnalyticsPage />} />
+                  <Route path="/settings" element={<SettingsPage />} />
+                  <Route path="/subscription" element={<SubscriptionPage />} />
+                  <Route path="/export" element={<ExportPage />} />
+                  <Route path="/pulse" element={<PulsePage />} />
+                  <Route path="/interactive" element={<InteractivePage />} />
+                </Routes>
+                <Toaster />
+              </div>
+            </ThemeProvider>
+          </SubscriptionProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </QueryClient>
+  );
+}
 
 export default App;
