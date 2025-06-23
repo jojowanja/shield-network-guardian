@@ -1,36 +1,23 @@
 
 import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from './use-toast';
-import { NetworkStats } from '@/services/networkService';
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-supabase-project-url.supabase.co';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-public-anon-key';
-
-const supabase = supabaseUrl !== 'https://your-supabase-project-url.supabase.co' 
-  ? createClient(supabaseUrl, supabaseKey)
-  : null;
-
-// Mock usage data for the subscription optimizer
-const mockUsageStats = {
-  mondayUsage: 15,
-  tuesdayUsage: 22,
-  wednesdayUsage: 18,
-  thursdayUsage: 25,
-  fridayUsage: 20,
-  saturdayUsage: 10,
-  sundayUsage: 5
-};
 
 export const useStatsSubscription = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [stats, setStats] = useState(mockUsageStats);
+  const [stats, setStats] = useState({
+    mondayUsage: 15,
+    tuesdayUsage: 22,
+    wednesdayUsage: 18,
+    thursdayUsage: 25,
+    fridayUsage: 20,
+    saturdayUsage: 10,
+    sundayUsage: 5
+  });
 
   useEffect(() => {
-    if (!supabase) return;
-
     // Subscribe to network stats changes
     const subscription = supabase
       .channel('network-stats-channel')
@@ -42,17 +29,18 @@ export const useStatsSubscription = () => {
           table: 'network_stats'
         },
         (payload) => {
+          console.log('Network stats change:', payload);
+          
           // Invalidate and refetch stats query
           queryClient.invalidateQueries({ queryKey: ['networkStats'] });
 
-          const statsData = payload.new as NetworkStats;
+          const statsData = payload.new as any;
           
           // Update the usage stats based on new network data
           setStats(prevStats => ({
             ...prevStats,
-            // Map new data to our usage structure (simplified)
-            mondayUsage: Math.max(prevStats.mondayUsage, statsData.downloadSpeed / 4),
-            tuesdayUsage: Math.max(prevStats.tuesdayUsage, statsData.downloadSpeed / 4)
+            mondayUsage: Math.max(prevStats.mondayUsage, statsData.download_speed / 4),
+            tuesdayUsage: Math.max(prevStats.tuesdayUsage, statsData.download_speed / 4)
           }));
           
           // Enhanced toast notifications with more detailed information
@@ -62,10 +50,10 @@ export const useStatsSubscription = () => {
               description: `Network stability has dropped to ${statsData.stability.toFixed(1)}%`,
               variant: 'destructive',
             });
-          } else if (statsData.downloadSpeed < 50) {
+          } else if (statsData.download_speed < 50) {
             toast({
               title: 'Network Speed Alert',
-              description: `Download speed has dropped to ${statsData.downloadSpeed.toFixed(1)} Mbps`,
+              description: `Download speed has dropped to ${statsData.download_speed.toFixed(1)} Mbps`,
               variant: 'destructive',
             });
           } else if (statsData.ping > 100) {

@@ -1,19 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
 
-// Initialize Supabase client with fallback values for development
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-supabase-project-url.supabase.co';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-public-anon-key';
-
-// Create client only if we have valid URL and key
-const supabaseClient = () => {
-  if (!supabaseUrl || supabaseUrl === 'https://your-supabase-project-url.supabase.co') {
-    console.warn('Supabase URL is not configured. Using mock data instead.');
-    return null;
-  }
-  return createClient(supabaseUrl, supabaseKey);
-};
-
-const supabase = supabaseClient();
+import { supabase } from "@/integrations/supabase/client";
 
 export interface Device {
   id: string;
@@ -52,131 +38,85 @@ export interface SecurityEvent {
   userId: string;
 }
 
-// Modified to handle the case when supabase client is not available
+// Fetch devices for authenticated user
 export const fetchDevices = async () => {
-  if (!supabase) {
-    // Return mock data when no Supabase connection
-    return mockDevices;
-  }
-
   const { data: session } = await supabase.auth.getSession();
   if (!session.session) throw new Error("User not authenticated");
 
   const { data, error } = await supabase
     .from("devices")
     .select("*")
-    .eq("userId", session.session.user.id)
-    .order("lastSeen", { ascending: false });
+    .eq("user_id", session.session.user.id)
+    .order("last_seen", { ascending: false });
+
+  if (error) throw error;
+  
+  // Transform data to match interface
+  return data.map(device => ({
+    id: device.id,
+    name: device.name,
+    type: device.type,
+    ip: device.ip,
+    mac: device.mac,
+    status: device.status,
+    lastSeen: device.last_seen || new Date().toISOString(),
+    bandwidth: Number(device.bandwidth) || 0,
+    userId: device.user_id,
+    owner: device.owner,
+    isGuest: device.is_guest
+  }));
+};
+
+export const addDevice = async (device: Omit<Device, "id" | "userId">) => {
+  const { data: session } = await supabase.auth.getSession();
+  if (!session.session) throw new Error("User not authenticated");
+
+  const { data, error } = await supabase
+    .from("devices")
+    .insert([{ 
+      name: device.name,
+      type: device.type,
+      ip: device.ip,
+      mac: device.mac,
+      status: device.status,
+      last_seen: device.lastSeen,
+      bandwidth: device.bandwidth,
+      owner: device.owner,
+      is_guest: device.isGuest,
+      user_id: session.session.user.id 
+    }])
+    .select()
+    .single();
 
   if (error) throw error;
   return data;
 };
 
-// Updated mock data with new fields
-const mockDevices = [
-  {
-    id: "1",
-    name: "MacBook Pro",
-    type: "laptop",
-    ip: "192.168.1.101",
-    mac: "A1:B2:C3:D4:E5:F6",
-    status: "online",
-    lastSeen: new Date().toISOString(),
-    bandwidth: 12.5,
-    userId: "mock-user-id",
-    owner: "John",
-    isGuest: false
-  },
-  {
-    id: "2",
-    name: "iPhone 13",
-    type: "smartphone",
-    ip: "192.168.1.102",
-    mac: "G7:H8:I9:J0:K1:L2",
-    status: "online",
-    lastSeen: new Date().toISOString(),
-    bandwidth: 5.2,
-    userId: "mock-user-id",
-    owner: "Sarah",
-    isGuest: false
-  },
-  {
-    id: "3",
-    name: "Smart TV",
-    type: "tv",
-    ip: "192.168.1.103",
-    mac: "M3:N4:O5:P6:Q7:R8",
-    status: "offline",
-    lastSeen: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-    bandwidth: 0,
-    userId: "mock-user-id",
-    owner: "Living Room",
-    isGuest: false
-  },
-  {
-    id: "4",
-    name: "Guest Laptop",
-    type: "laptop",
-    ip: "192.168.1.104",
-    mac: "S9:T0:U1:V2:W3:X4",
-    status: "online",
-    lastSeen: new Date().toISOString(),
-    bandwidth: 3.7,
-    userId: "mock-user-id",
-    owner: "Guest",
-    isGuest: true
-  }
-];
-
-// Update the rest of the functions to handle the case when supabase is null
-export const addDevice = async (device: Omit<Device, "id" | "userId">) => {
-  if (!supabase) {
-    // Return mock response
-    return { ...device, id: `mock-${Date.now()}`, userId: "mock-user-id" };
-  }
-
-  const { data: session } = await supabase.auth.getSession();
-  if (!session.session) throw new Error("User not authenticated");
-
-  const { data, error } = await supabase
-    .from("devices")
-    .insert([{ ...device, userId: session.session.user.id }])
-    .select();
-
-  if (error) throw error;
-  return data[0];
-};
-
 export const updateDevice = async (id: string, updates: Partial<Device>) => {
-  if (!supabase) {
-    // Return mock response
-    const deviceIndex = mockDevices.findIndex(d => d.id === id);
-    if (deviceIndex >= 0) {
-      mockDevices[deviceIndex] = { ...mockDevices[deviceIndex], ...updates };
-      return mockDevices[deviceIndex];
-    }
-    return { ...updates, id, userId: "mock-user-id" };
-  }
-
   const { data: session } = await supabase.auth.getSession();
   if (!session.session) throw new Error("User not authenticated");
 
+  const dbUpdates: any = {};
+  if (updates.name) dbUpdates.name = updates.name;
+  if (updates.status) dbUpdates.status = updates.status;
+  if (updates.lastSeen) dbUpdates.last_seen = updates.lastSeen;
+  if (updates.bandwidth !== undefined) dbUpdates.bandwidth = updates.bandwidth;
+  if (updates.owner) dbUpdates.owner = updates.owner;
+  if (updates.isGuest !== undefined) dbUpdates.is_guest = updates.isGuest;
+
   const { data, error } = await supabase
     .from("devices")
-    .update(updates)
+    .update(dbUpdates)
     .eq("id", id)
-    .eq("userId", session.session.user.id)
-    .select();
+    .eq("user_id", session.session.user.id)
+    .select()
+    .single();
 
   if (error) throw error;
-  return data[0];
+  return data;
 };
 
 export const removeDevice = async (id: string) => {
-  if (!supabase) {
-    return true; // Mock success
-  }
-
   const { data: session } = await supabase.auth.getSession();
   if (!session.session) throw new Error("User not authenticated");
 
@@ -184,154 +124,110 @@ export const removeDevice = async (id: string) => {
     .from("devices")
     .delete()
     .eq("id", id)
-    .eq("userId", session.session.user.id);
+    .eq("user_id", session.session.user.id);
 
   if (error) throw error;
   return true;
 };
 
-// Mock network stats
-const mockNetworkStats = Array(10).fill(null).map((_, i) => ({
-  id: `mock-${i}`,
-  downloadSpeed: 80 + Math.random() * 20,
-  uploadSpeed: 20 + Math.random() * 10,
-  ping: 15 + Math.random() * 10,
-  stability: 90 + Math.random() * 10,
-  devices: 3 + Math.floor(Math.random() * 5),
-  activeOptimizations: Math.floor(Math.random() * 4),
-  timestamp: new Date(Date.now() - i * 3600000).toISOString(),
-  userId: "mock-user-id"
-}));
-
 export const fetchNetworkStats = async (limit = 10) => {
-  if (!supabase) {
-    return mockNetworkStats.slice(0, limit);
-  }
-
   const { data: session } = await supabase.auth.getSession();
   if (!session.session) throw new Error("User not authenticated");
 
   const { data, error } = await supabase
     .from("network_stats")
     .select("*")
-    .eq("userId", session.session.user.id)
+    .eq("user_id", session.session.user.id)
     .order("timestamp", { ascending: false })
     .limit(limit);
 
   if (error) throw error;
-  return data;
+  
+  return data.map(stat => ({
+    id: stat.id,
+    downloadSpeed: Number(stat.download_speed),
+    uploadSpeed: Number(stat.upload_speed),
+    ping: Number(stat.ping),
+    stability: Number(stat.stability),
+    devices: stat.devices,
+    activeOptimizations: stat.active_optimizations || 0,
+    timestamp: stat.timestamp || new Date().toISOString(),
+    userId: stat.user_id
+  }));
 };
 
 export const addNetworkStat = async (stat: Omit<NetworkStats, "id" | "userId">) => {
-  if (!supabase) {
-    return { ...stat, id: `mock-${Date.now()}`, userId: "mock-user-id" };
-  }
-
   const { data: session } = await supabase.auth.getSession();
   if (!session.session) throw new Error("User not authenticated");
 
   const { data, error } = await supabase
     .from("network_stats")
-    .insert([{ ...stat, userId: session.session.user.id }])
-    .select();
+    .insert([{ 
+      download_speed: stat.downloadSpeed,
+      upload_speed: stat.uploadSpeed,
+      ping: stat.ping,
+      stability: stat.stability,
+      devices: stat.devices,
+      active_optimizations: stat.activeOptimizations,
+      timestamp: stat.timestamp,
+      user_id: session.session.user.id 
+    }])
+    .select()
+    .single();
 
   if (error) throw error;
-  return data[0];
+  return data;
 };
 
-// Updated mock security events with new device alerts
-const mockSecurityEvents = [
-  {
-    id: "1",
-    deviceId: "2",
-    eventType: "new_device",
-    severity: "low",
-    description: "New device connected to your network",
-    timestamp: new Date(Date.now() - 1800000).toISOString(),
-    resolved: false,
-    userId: "mock-user-id"
-  },
-  {
-    id: "2",
-    deviceId: null,
-    eventType: "suspicious_activity",
-    severity: "high",
-    description: "Unusual outbound traffic detected",
-    timestamp: new Date(Date.now() - 3600000).toISOString(),
-    resolved: false,
-    userId: "mock-user-id"
-  },
-  {
-    id: "3",
-    deviceId: "1",
-    eventType: "network_change",
-    severity: "medium",
-    description: "Network configuration changed",
-    timestamp: new Date(Date.now() - 86400000).toISOString(),
-    resolved: true,
-    userId: "mock-user-id"
-  },
-  {
-    id: "4",
-    deviceId: null,
-    eventType: "new_device",
-    severity: "medium",
-    description: "Unknown device detected on your network",
-    timestamp: new Date().toISOString(),
-    resolved: false,
-    userId: "mock-user-id"
-  }
-];
-
 export const fetchSecurityEvents = async (resolved = false, limit = 10) => {
-  if (!supabase) {
-    return mockSecurityEvents
-      .filter(event => event.resolved === resolved)
-      .slice(0, limit);
-  }
-
   const { data: session } = await supabase.auth.getSession();
   if (!session.session) throw new Error("User not authenticated");
 
   const { data, error } = await supabase
     .from("security_events")
     .select("*")
-    .eq("userId", session.session.user.id)
+    .eq("user_id", session.session.user.id)
     .eq("resolved", resolved)
     .order("timestamp", { ascending: false })
     .limit(limit);
 
   if (error) throw error;
-  return data;
+  
+  return data.map(event => ({
+    id: event.id,
+    deviceId: event.device_id,
+    eventType: event.event_type,
+    severity: event.severity,
+    description: event.description,
+    timestamp: event.timestamp || new Date().toISOString(),
+    resolved: event.resolved || false,
+    userId: event.user_id
+  }));
 };
 
 export const addSecurityEvent = async (event: Omit<SecurityEvent, "id" | "userId">) => {
-  if (!supabase) {
-    return { ...event, id: `mock-${Date.now()}`, userId: "mock-user-id" };
-  }
-
   const { data: session } = await supabase.auth.getSession();
   if (!session.session) throw new Error("User not authenticated");
 
   const { data, error } = await supabase
     .from("security_events")
-    .insert([{ ...event, userId: session.session.user.id }])
-    .select();
+    .insert([{ 
+      device_id: event.deviceId,
+      event_type: event.eventType,
+      severity: event.severity,
+      description: event.description,
+      resolved: event.resolved,
+      timestamp: event.timestamp,
+      user_id: session.session.user.id 
+    }])
+    .select()
+    .single();
 
   if (error) throw error;
-  return data[0];
+  return data;
 };
 
 export const resolveSecurityEvent = async (id: string) => {
-  if (!supabase) {
-    const event = mockSecurityEvents.find(e => e.id === id);
-    if (event) {
-      event.resolved = true;
-      return event;
-    }
-    return null;
-  }
-
   const { data: session } = await supabase.auth.getSession();
   if (!session.session) throw new Error("User not authenticated");
 
@@ -339,9 +235,10 @@ export const resolveSecurityEvent = async (id: string) => {
     .from("security_events")
     .update({ resolved: true })
     .eq("id", id)
-    .eq("userId", session.session.user.id)
-    .select();
+    .eq("user_id", session.session.user.id)
+    .select()
+    .single();
 
   if (error) throw error;
-  return data[0];
+  return data;
 };

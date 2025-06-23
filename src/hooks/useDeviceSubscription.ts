@@ -1,24 +1,14 @@
 
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from './use-toast';
-import { Device } from '@/services/networkService';
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-supabase-project-url.supabase.co';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-public-anon-key';
-
-const supabase = supabaseUrl !== 'https://your-supabase-project-url.supabase.co' 
-  ? createClient(supabaseUrl, supabaseKey)
-  : null;
 
 export const useDeviceSubscription = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (!supabase) return;
-
     // Subscribe to device changes
     const subscription = supabase
       .channel('devices-channel')
@@ -30,20 +20,22 @@ export const useDeviceSubscription = () => {
           table: 'devices'
         },
         (payload) => {
+          console.log('Device change:', payload);
+          
           // Invalidate and refetch devices query
           queryClient.invalidateQueries({ queryKey: ['devices'] });
 
           // Show toast notification based on the change
           const operation = payload.eventType;
-          const device = payload.new as Device;
+          const device = payload.new as any;
 
-          if (operation === 'INSERT') {
+          if (operation === 'INSERT' && device) {
             toast({
               title: 'New device detected',
               description: `${device.name} (${device.type}) has connected to your network`,
               variant: 'default',
             });
-          } else if (operation === 'UPDATE') {
+          } else if (operation === 'UPDATE' && device) {
             if (device.status === 'offline') {
               toast({
                 title: 'Device disconnected',

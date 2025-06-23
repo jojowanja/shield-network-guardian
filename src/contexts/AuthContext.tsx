@@ -1,40 +1,7 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { createClient, Session, User } from "@supabase/supabase-js";
-
-// Initialize Supabase client with fallback values for development
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-supabase-project-url.supabase.co';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-public-anon-key';
-
-// Create client only if we have valid URL and key
-const supabaseClient = () => {
-  if (!supabaseUrl || supabaseUrl === 'https://your-supabase-project-url.supabase.co') {
-    console.warn('Supabase URL is not configured. Using demo mode.');
-    return null;
-  }
-  return createClient(supabaseUrl, supabaseKey);
-};
-
-const supabase = supabaseClient();
-
-// Mock user for demo mode
-const mockUser = {
-  id: "mock-user-id",
-  email: "demo@example.com",
-  app_metadata: {},
-  user_metadata: { name: "Demo User" },
-  aud: "authenticated",
-  created_at: new Date().toISOString()
-};
-
-// Mock session for demo mode
-const mockSession = {
-  access_token: "mock-token",
-  refresh_token: "mock-refresh-token",
-  token_type: "bearer",
-  expires_in: 3600,
-  expires_at: Math.floor(Date.now() / 1000) + 3600,
-  user: mockUser
-};
+import { Session, User } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AuthContextType {
   user: User | null;
@@ -43,6 +10,8 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<{ shouldRedirectToWelcome: boolean }>;
+  signUp: (email: string, password: string, userData?: any) => Promise<{ error: any }>;
+  resetPassword: (email: string) => Promise<{ error: any }>;
   isNewUser: boolean;
 }
 
@@ -53,6 +22,8 @@ const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
   refreshSession: async () => {},
   signIn: async () => ({ shouldRedirectToWelcome: false }),
+  signUp: async () => ({ error: null }),
+  resetPassword: async () => ({ error: null }),
   isNewUser: false,
 });
 
@@ -64,72 +35,85 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isNewUser, setIsNewUser] = useState(false);
 
-  // Demo mode
-  const isDemo = !supabase;
+  // Function to sign up
+  const signUp = async (email: string, password: string, userData?: any) => {
+    try {
+      setIsLoading(true);
+      const redirectUrl = `${window.location.origin}/welcome`;
+      
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: userData
+        }
+      });
+      
+      if (error) throw error;
+      
+      return { error: null };
+    } catch (error: any) {
+      console.error("Error signing up:", error);
+      return { error };
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Function to sign in
   const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      if (isDemo) {
-        // In demo mode, simulate authentication delay
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        // Check if this is a "new" user (for demo purposes)
-        const isFirstTime = !localStorage.getItem('shield_user_visited');
-        setIsNewUser(isFirstTime);
-        
-        if (isFirstTime) {
-          localStorage.setItem('shield_user_visited', 'true');
-        }
-        
-        // Create enhanced mock user with better data
-        const enhancedMockUser = {
-          ...mockUser,
-          email,
-          user_metadata: { 
-            name: email.split('@')[0],
-            full_name: email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1),
-            avatar_url: `https://api.dicebear.com/7.x/initials/svg?seed=${email}`
-          }
-        };
-        
-        setUser(enhancedMockUser as User);
-        setSession({ ...mockSession, user: enhancedMockUser } as Session);
-        setIsLoading(false);
-        return { shouldRedirectToWelcome: isFirstTime };
-      }
-      const { data, error } = await supabase!.auth.signInWithPassword({
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
+      
       if (error) throw error;
-      setUser(data.user);
-      setSession(data.session);
-      return { shouldRedirectToWelcome: false };
+      
+      // Check if this is a new user by checking if they have a profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', data.user.id)
+        .single();
+      
+      const isFirstTime = !profile;
+      setIsNewUser(isFirstTime);
+      
+      return { shouldRedirectToWelcome: isFirstTime };
     } catch (error) {
       console.error("Error signing in:", error);
       throw error;
     } finally {
-      if (!isDemo) {
-        setIsLoading(false);
-      }
+      setIsLoading(false);
+    }
+  };
+
+  // Function to reset password
+  const resetPassword = async (email: string) => {
+    try {
+      const redirectUrl = `${window.location.origin}/auth?mode=reset`;
+      
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: redirectUrl,
+      });
+      
+      if (error) throw error;
+      
+      return { error: null };
+    } catch (error: any) {
+      console.error("Error resetting password:", error);
+      return { error };
     }
   };
 
   // Function to refresh the session
   const refreshSession = async () => {
     try {
-      if (isDemo) {
-        // In demo mode, start with no user to force login
-        console.info("Running in demo mode - user must authenticate");
-        setUser(null);
-        setSession(null);
-        setIsLoading(false);
-        return;
-      }
-
-      const { data, error } = await supabase!.auth.getSession();
+      const { data, error } = await supabase.auth.getSession();
       if (error) throw error;
       
       setSession(data.session);
@@ -146,15 +130,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Function to sign out
   const signOut = async () => {
     try {
-      if (isDemo) {
-        // In demo mode, just clear state
-        setSession(null);
-        setUser(null);
-        setIsNewUser(false);
-        return;
-      }
-
-      const { error } = await supabase!.auth.signOut();
+      const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
       setSession(null);
@@ -166,25 +142,43 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    // Initial session check
+    // Get initial session
     refreshSession();
     
-    // Set up auth state change listener if not in demo mode
-    if (!isDemo && supabase) {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        (_event, session) => {
-          setSession(session);
-          setUser(session?.user || null);
-          setIsLoading(false);
+    // Set up auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth event:', event, session?.user?.email);
+        
+        setSession(session);
+        setUser(session?.user || null);
+        setIsLoading(false);
+        
+        // Log sign-in event for notifications
+        if (event === 'SIGNED_IN' && session?.user) {
+          try {
+            // Create a sign-in notification entry
+            await supabase.from('security_events').insert({
+              user_id: session.user.id,
+              event_type: 'other',
+              severity: 'low',
+              description: `User signed in from ${navigator.userAgent.includes('Chrome') ? 'Chrome' : 'Browser'} at ${new Date().toLocaleString()}`,
+              resolved: true
+            });
+            
+            console.log('Sign-in event logged for email notifications');
+          } catch (error) {
+            console.error('Error logging sign-in event:', error);
+          }
         }
-      );
+      }
+    );
 
-      // Clean up subscription
-      return () => {
-        subscription.unsubscribe();
-      };
-    }
-  }, [isDemo]);
+    // Clean up subscription
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   const value = {
     user,
@@ -193,6 +187,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     signOut,
     refreshSession,
     signIn,
+    signUp,
+    resetPassword,
     isNewUser,
   };
 

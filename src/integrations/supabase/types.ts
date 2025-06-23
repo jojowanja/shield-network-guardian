@@ -9,7 +9,155 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      devices: {
+        Row: {
+          bandwidth: number | null
+          created_at: string | null
+          id: string
+          ip: string
+          is_guest: boolean | null
+          last_seen: string | null
+          mac: string
+          name: string
+          owner: string | null
+          status: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          bandwidth?: number | null
+          created_at?: string | null
+          id?: string
+          ip: string
+          is_guest?: boolean | null
+          last_seen?: string | null
+          mac: string
+          name: string
+          owner?: string | null
+          status: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          bandwidth?: number | null
+          created_at?: string | null
+          id?: string
+          ip?: string
+          is_guest?: boolean | null
+          last_seen?: string | null
+          mac?: string
+          name?: string
+          owner?: string | null
+          status?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      network_stats: {
+        Row: {
+          active_optimizations: number | null
+          devices: number
+          download_speed: number
+          id: string
+          ping: number
+          stability: number
+          timestamp: string | null
+          upload_speed: number
+          user_id: string
+        }
+        Insert: {
+          active_optimizations?: number | null
+          devices: number
+          download_speed: number
+          id?: string
+          ping: number
+          stability: number
+          timestamp?: string | null
+          upload_speed: number
+          user_id: string
+        }
+        Update: {
+          active_optimizations?: number | null
+          devices?: number
+          download_speed?: number
+          id?: string
+          ping?: number
+          stability?: number
+          timestamp?: string | null
+          upload_speed?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          full_name: string | null
+          id: string
+          updated_at: string | null
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id: string
+          updated_at?: string | null
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
+      security_events: {
+        Row: {
+          description: string
+          device_id: string | null
+          event_type: string
+          id: string
+          resolved: boolean | null
+          severity: string
+          timestamp: string | null
+          user_id: string
+        }
+        Insert: {
+          description: string
+          device_id?: string | null
+          event_type: string
+          id?: string
+          resolved?: boolean | null
+          severity: string
+          timestamp?: string | null
+          user_id: string
+        }
+        Update: {
+          description?: string
+          device_id?: string | null
+          event_type?: string
+          id?: string
+          resolved?: boolean | null
+          severity?: string
+          timestamp?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "security_events_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
