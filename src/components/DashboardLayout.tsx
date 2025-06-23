@@ -1,6 +1,6 @@
 
 import { ReactNode, useState } from "react";
-import { Bell, Search, User, ChartBar, FileText, Menu } from "lucide-react";
+import { Bell, Search, User, ChartBar, FileText, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,8 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Link, useNavigate } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useRealtimeToasts } from "@/hooks/useRealtimeToasts";
+import { useSearch } from "@/hooks/useSearch";
+import { useNotifications } from "@/hooks/useNotifications";
 import {
   Home,
   Shield,
@@ -38,6 +40,8 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [isSigningOut, setIsSigningOut] = useState(false);
   
   const isMobile = useIsMobile();
+  const { query, setQuery, results, isOpen, handleSelect, clearSearch } = useSearch();
+  const { notifications, unreadCount, handleNotificationClick, markAllAsRead } = useNotifications();
   
   // Initialize real-time toasts
   useRealtimeToasts();
@@ -67,6 +71,20 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     { icon: Settings, label: "Settings", path: "/settings" },
     { icon: CreditCard, label: "Subscription", path: "/subscription" },
   ];
+
+  const formatTimeAgo = (date: Date) => {
+    const now = new Date();
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes < 1) return 'Just now';
+    if (diffInMinutes < 60) return `${diffInMinutes} minutes ago`;
+    
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours} hours ago`;
+    
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays} days ago`;
+  };
 
   return (
     <div className="flex flex-col h-screen max-h-screen w-full overflow-hidden bg-gray-50 dark:bg-background">
@@ -123,7 +141,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           </div>
         )}
         
-        {/* Mobile sidebar - use Sheet component for slide-over menu */}
+        {/* Mobile sidebar */}
         {isMobile && (
           <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
             <SheetContent side="left" className="p-0 w-[85%] max-w-[300px] sm:w-[350px]">
@@ -193,50 +211,114 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                   <Menu size={20} />
                 </Button>
               )}
+              
+              {/* Functional Search */}
               <div className="relative w-full max-w-md hidden sm:block">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                 <Input 
-                  placeholder="Search..." 
-                  className="pl-10 rounded-full bg-gray-100 dark:bg-muted border-none focus-visible:ring-offset-0"
+                  placeholder="Search devices, settings, security..." 
+                  className="pl-10 pr-10 rounded-full bg-gray-100 dark:bg-muted border-none focus-visible:ring-offset-0"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
                 />
+                {query && (
+                  <button
+                    onClick={clearSearch}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X size={18} />
+                  </button>
+                )}
+                
+                {/* Search Results Dropdown */}
+                {isOpen && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-card rounded-md shadow-lg border border-border z-50 max-h-64 overflow-y-auto">
+                    {results.map((result) => (
+                      <div
+                        key={result.id}
+                        className="p-3 hover:bg-gray-50 dark:hover:bg-muted cursor-pointer border-b border-border last:border-b-0"
+                        onClick={() => handleSelect(result)}
+                      >
+                        <div className="font-medium text-sm">{result.title}</div>
+                        <div className="text-xs text-muted-foreground">{result.description}</div>
+                        <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                          {result.type.charAt(0).toUpperCase() + result.type.slice(1)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
             
             <div className="flex items-center space-x-2 md:space-x-4">
               <ThemeToggle />
               
+              {/* Functional Notifications */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="relative">
                     <Bell size={20} />
-                    <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs">
-                      3
-                    </Badge>
+                    {unreadCount > 0 && (
+                      <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs">
+                        {unreadCount}
+                      </Badge>
+                    )}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-80">
-                  <div className="p-2 font-medium">Notifications</div>
-                  <DropdownMenuItem className="p-3 cursor-pointer">
-                    <div className="flex flex-col gap-1">
-                      <p className="font-medium">New device connected</p>
-                      <p className="text-sm text-muted-foreground">iPhone 13 Pro has connected to your network</p>
-                      <p className="text-xs text-muted-foreground">10 minutes ago</p>
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="p-3 cursor-pointer">
-                    <div className="flex flex-col gap-1">
-                      <p className="font-medium text-status-warning">Security Alert</p>
-                      <p className="text-sm text-muted-foreground">Unusual login attempt detected</p>
-                      <p className="text-xs text-muted-foreground">25 minutes ago</p>
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="p-3 cursor-pointer">
-                    <div className="flex flex-col gap-1">
-                      <p className="font-medium">Network Status</p>
-                      <p className="text-sm text-muted-foreground">Smart Connect optimized your network</p>
-                      <p className="text-xs text-muted-foreground">1 hour ago</p>
-                    </div>
-                  </DropdownMenuItem>
+                  <div className="flex items-center justify-between p-3 border-b">
+                    <div className="font-medium">Notifications</div>
+                    {unreadCount > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs"
+                        onClick={markAllAsRead}
+                      >
+                        Mark all read
+                      </Button>
+                    )}
+                  </div>
+                  
+                  <div className="max-h-64 overflow-y-auto">
+                    {notifications.length === 0 ? (
+                      <div className="p-4 text-center text-muted-foreground">
+                        No notifications
+                      </div>
+                    ) : (
+                      notifications.map((notification) => (
+                        <DropdownMenuItem 
+                          key={notification.id}
+                          className="p-3 cursor-pointer flex flex-col items-start space-y-1"
+                          onClick={() => handleNotificationClick(notification)}
+                        >
+                          <div className="flex items-start justify-between w-full">
+                            <div className="flex flex-col gap-1 flex-1">
+                              <div className="flex items-center gap-2">
+                                <p className={cn(
+                                  "font-medium text-sm",
+                                  notification.type === "warning" && "text-orange-600",
+                                  notification.type === "error" && "text-red-600",
+                                  notification.type === "success" && "text-green-600"
+                                )}>
+                                  {notification.title}
+                                </p>
+                                {!notification.read && (
+                                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                )}
+                              </div>
+                              <p className="text-sm text-muted-foreground">{notification.description}</p>
+                              <p className="text-xs text-muted-foreground">{formatTimeAgo(notification.timestamp)}</p>
+                              {notification.actionRequired && (
+                                <p className="text-xs text-blue-600 dark:text-blue-400">Action required</p>
+                              )}
+                            </div>
+                          </div>
+                        </DropdownMenuItem>
+                      ))
+                    )}
+                  </div>
                 </DropdownMenuContent>
               </DropdownMenu>
               

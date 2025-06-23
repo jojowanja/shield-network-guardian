@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { createClient, Session, User } from "@supabase/supabase-js";
 
@@ -43,7 +42,8 @@ interface AuthContextType {
   isLoading: boolean;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<{ shouldRedirectToWelcome: boolean }>;
+  isNewUser: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -52,7 +52,8 @@ const AuthContext = createContext<AuthContextType>({
   isLoading: true,
   signOut: async () => {},
   refreshSession: async () => {},
-  signIn: async () => {},
+  signIn: async () => ({ shouldRedirectToWelcome: false }),
+  isNewUser: false,
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -61,6 +62,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isNewUser, setIsNewUser] = useState(false);
 
   // Demo mode
   const isDemo = !supabase;
@@ -72,6 +74,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (isDemo) {
         // In demo mode, simulate authentication delay
         await new Promise(resolve => setTimeout(resolve, 800));
+        
+        // Check if this is a "new" user (for demo purposes)
+        const isFirstTime = !localStorage.getItem('shield_user_visited');
+        setIsNewUser(isFirstTime);
+        
+        if (isFirstTime) {
+          localStorage.setItem('shield_user_visited', 'true');
+        }
         
         // Create enhanced mock user with better data
         const enhancedMockUser = {
@@ -87,7 +97,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(enhancedMockUser as User);
         setSession({ ...mockSession, user: enhancedMockUser } as Session);
         setIsLoading(false);
-        return;
+        return { shouldRedirectToWelcome: isFirstTime };
       }
       const { data, error } = await supabase!.auth.signInWithPassword({
         email,
@@ -96,6 +106,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (error) throw error;
       setUser(data.user);
       setSession(data.session);
+      return { shouldRedirectToWelcome: false };
     } catch (error) {
       console.error("Error signing in:", error);
       throw error;
@@ -139,6 +150,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // In demo mode, just clear state
         setSession(null);
         setUser(null);
+        setIsNewUser(false);
         return;
       }
 
@@ -147,6 +159,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       setSession(null);
       setUser(null);
+      setIsNewUser(false);
     } catch (error) {
       console.error("Error signing out:", error);
     }
@@ -180,6 +193,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     signOut,
     refreshSession,
     signIn,
+    isNewUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -1,313 +1,370 @@
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTogger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { toast } from "@/components/ui/use-toast";
-import { PasswordStrengthChecker } from "@/components/PasswordStrengthChecker";
+import { toast } from "sonner";
+import { Eye, EyeOff, AlertCircle, CheckCircle } from "lucide-react";
 import { checkPasswordStrength } from "@/utils/passwordUtils";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+
+// Enhanced password validation schema
+const passwordSchema = z.string()
+  .min(8, "Password must be at least 8 characters long")
+  .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+  .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+  .regex(/[0-9]/, "Password must contain at least one number")
+  .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character");
+
+const loginSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(1, "Password is required"),
+});
+
+const registerSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: passwordSchema,
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
+const forgotPasswordSchema = z.object({
+  email: z.string().email("Invalid email address"),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
+type RegisterFormValues = z.infer<typeof registerSchema>;
+type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 
 export const AuthForm = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [resetEmail, setResetEmail] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
-  const { signIn, isLoading: authLoading, user } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState<any>(null);
+  const { signIn } = useAuth();
   const navigate = useNavigate();
-  const isFormLoading = isLoading || authLoading;
 
-  const passwordStrength = checkPasswordStrength(password);
-  const isPasswordValid = passwordStrength.score >= 2; // Minimum medium strength
+  const loginForm = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "", password: "" }
+  });
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  const registerForm = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: { email: "", password: "", confirmPassword: "" }
+  });
+
+  const forgotPasswordForm = useForm<ForgotPasswordFormValues>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: { email: "" }
+  });
+
+  const handleLogin = async (data: LoginFormValues) => {
     try {
-      await signIn(email, password);
-      toast({
-        title: "Login successful",
-        description: "Welcome back to Shield Network Guardian!",
+      setIsLoading(true);
+      const result = await signIn(data.email, data.password);
+      
+      toast.success("Welcome back!", {
+        description: "You have successfully signed in."
       });
-      navigate("/");
-    } catch (error) {
-      console.error("Login error:", error);
-      toast({
-        title: "Login failed",
-        description: "Please check your credentials and try again.",
-        variant: "destructive",
+
+      if (result.shouldRedirectToWelcome) {
+        navigate("/welcome");
+      } else {
+        navigate("/");
+      }
+    } catch (error: any) {
+      toast.error("Sign in failed", {
+        description: error.message || "Please check your credentials and try again."
       });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!isPasswordValid) {
-      toast({
-        title: "Password too weak",
-        description: "Please choose a stronger password (minimum medium strength).",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      toast({
-        title: "Passwords don't match",
-        description: "Please make sure both passwords are identical.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsLoading(true);
+  const handleRegister = async (data: RegisterFormValues) => {
     try {
+      setIsLoading(true);
+      
       // In demo mode, simulate registration
       await new Promise(resolve => setTimeout(resolve, 1000));
-      toast({
-        title: "Registration successful",
-        description: "Welcome to Shield Network Guardian! Please log in.",
+      
+      toast.success("Account created successfully!", {
+        description: "Welcome to Shield Network Guardian"
       });
-      setActiveTab("login");
-    } catch (error) {
-      console.error("Registration error:", error);
-      toast({
-        title: "Registration failed",
-        description: "Please try again later.",
-        variant: "destructive",
+      
+      // Auto-sign them in
+      const result = await signIn(data.email, data.password);
+      navigate(result.shouldRedirectToWelcome ? "/welcome" : "/");
+      
+    } catch (error: any) {
+      toast.error("Registration failed", {
+        description: error.message || "Please try again."
       });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleForgotPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  const handleForgotPassword = async (data: ForgotPasswordFormValues) => {
     try {
+      setIsLoading(true);
+      
       // In demo mode, simulate password reset
       await new Promise(resolve => setTimeout(resolve, 1000));
-      toast({
-        title: "Password reset sent",
-        description: "Check your email for password reset instructions.",
+      
+      toast.success("Reset link sent!", {
+        description: "Check your email for password reset instructions."
       });
-      setShowForgotPassword(false);
-      setResetEmail("");
-    } catch (error) {
-      console.error("Password reset error:", error);
-      toast({
-        title: "Password reset failed",
-        description: "Please try again later.",
-        variant: "destructive",
+      
+      setActiveTab("login");
+    } catch (error: any) {
+      toast.error("Reset failed", {
+        description: error.message || "Please try again."
       });
     } finally {
       setIsLoading(false);
     }
   };
 
-  // If user is already logged in, redirect
-  if (user) {
-    navigate("/");
-    return null;
-  }
+  const handlePasswordChange = (password: string) => {
+    if (password) {
+      const strength = checkPasswordStrength(password);
+      setPasswordStrength(strength);
+    } else {
+      setPasswordStrength(null);
+    }
+  };
 
-  if (showForgotPassword) {
-    return (
-      <Card className="w-full backdrop-blur-sm bg-white/10 border-white/20 shadow-2xl">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl text-white">Reset Password</CardTitle>
-          <CardDescription className="text-blue-200">
-            Enter your email to receive reset instructions
-          </CardDescription>
-        </CardHeader>
-        <form onSubmit={handleForgotPassword}>
-          <CardContent className="space-y-4 pt-4">
-            <div className="space-y-2">
-              <Label htmlFor="reset-email" className="text-white">Email</Label>
-              <Input
-                id="reset-email"
-                type="email"
-                placeholder="you@example.com"
-                value={resetEmail}
-                onChange={(e) => setResetEmail(e.target.value)}
-                required
-                className="bg-white/10 border-white/20 text-white placeholder:text-blue-200 focus:border-blue-400"
-              />
-            </div>
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-2">
-            <Button 
-              type="submit" 
-              className="w-full bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white shadow-lg" 
-              disabled={isFormLoading}
-            >
-              {isFormLoading ? "Sending..." : "Send Reset Email"}
-            </Button>
-            <Button 
-              type="button" 
-              variant="ghost" 
-              className="text-blue-200 hover:text-white"
-              onClick={() => setShowForgotPassword(false)}
-            >
-              Back to Login
-            </Button>
-          </CardFooter>
-        </form>
-      </Card>
-    );
-  }
+  const getStrengthColor = (score: number) => {
+    switch(score) {
+      case 0: return "text-red-500";
+      case 1: return "text-orange-500";
+      case 2: return "text-yellow-500";
+      case 3: return "text-green-500";
+      case 4: return "text-green-700";
+      default: return "text-gray-500";
+    }
+  };
+
+  const getStrengthLabel = (score: number) => {
+    switch(score) {
+      case 0: return "Very Weak";
+      case 1: return "Weak";
+      case 2: return "Medium";
+      case 3: return "Strong";
+      case 4: return "Very Strong";
+      default: return "";
+    }
+  };
 
   return (
-    <Card className="w-full backdrop-blur-sm bg-white/10 border-white/20 shadow-2xl">
+    <Card className="w-full max-w-md mx-auto bg-white/10 backdrop-blur-md border-white/20">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl text-white">Secure Access</CardTitle>
+        <CardTitle className="text-2xl text-white">Welcome</CardTitle>
         <CardDescription className="text-blue-200">
-          Authenticate to access your Shield dashboard
+          Sign in to your account or create a new one
         </CardDescription>
       </CardHeader>
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-2 w-full bg-white/10 border-white/20">
-          <TabsTrigger value="login" className="data-[state=active]:bg-white/20 data-[state=active]:text-white text-blue-200">
-            Login
-          </TabsTrigger>
-          <TabsTrigger value="register" className="data-[state=active]:bg-white/20 data-[state=active]:text-white text-blue-200">
-            Register
-          </TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="login">
-          <form onSubmit={handleLogin}>
-            <CardContent className="space-y-4 pt-4">
+      <CardContent>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3 bg-white/10">
+            <TabsTrigger value="login" className="text-white data-[state=active]:bg-white data-[state=active]:text-blue-900">
+              Sign In
+            </TabsTrigger>
+            <TabsTrigger value="register" className="text-white data-[state=active]:bg-white data-[state=active]:text-blue-900">
+              Register
+            </TabsTrigger>
+            <TabsTrigger value="forgot" className="text-white data-[state=active]:bg-white data-[state=active]:text-blue-900">
+              Reset
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="login" className="space-y-4 mt-6">
+            <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-white">Email</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="bg-white/10 border-white/20 text-white placeholder:text-blue-200 focus:border-blue-400"
+                  placeholder="Enter your email"
+                  className="bg-white/10 border-white/20 text-white placeholder:text-blue-200"
+                  {...loginForm.register("email")}
                 />
+                {loginForm.formState.errors.email && (
+                  <p className="text-red-400 text-sm">{loginForm.formState.errors.email.message}</p>
+                )}
               </div>
+
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password" className="text-white">Password</Label>
-                  <button 
+                <Label htmlFor="password" className="text-white">Password</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter your password"
+                    className="bg-white/10 border-white/20 text-white placeholder:text-blue-200 pr-10"
+                    {...loginForm.register("password")}
+                  />
+                  <button
                     type="button"
-                    className="text-sm text-blue-300 hover:text-blue-200 hover:underline"
-                    onClick={() => setShowForgotPassword(true)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-200 hover:text-white"
+                    onClick={() => setShowPassword(!showPassword)}
                   >
-                    Forgot password?
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="bg-white/10 border-white/20 text-white placeholder:text-blue-200 focus:border-blue-400"
-                />
+                {loginForm.formState.errors.password && (
+                  <p className="text-red-400 text-sm">{loginForm.formState.errors.password.message}</p>
+                )}
               </div>
-            </CardContent>
-            <CardFooter>
+
               <Button 
                 type="submit" 
-                className="w-full bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white shadow-lg" 
-                disabled={isFormLoading}
+                className="w-full bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500"
+                disabled={isLoading}
               >
-                {isFormLoading ? "Authenticating..." : "Secure Login"}
+                {isLoading ? "Signing in..." : "Sign In"}
               </Button>
-            </CardFooter>
-          </form>
-        </TabsContent>
-        
-        <TabsContent value="register">
-          <form onSubmit={handleRegister}>
-            <CardContent className="space-y-4 pt-4">
+            </form>
+          </TabsContent>
+
+          <TabsContent value="register" className="space-y-4 mt-6">
+            <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="signup-email" className="text-white">Email</Label>
-                <Input 
-                  id="signup-email" 
-                  type="email" 
-                  placeholder="you@example.com" 
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required 
-                  className="bg-white/10 border-white/20 text-white placeholder:text-blue-200 focus:border-blue-400"
+                <Label htmlFor="reg-email" className="text-white">Email</Label>
+                <Input
+                  id="reg-email"
+                  type="email"
+                  placeholder="Enter your email"
+                  className="bg-white/10 border-white/20 text-white placeholder:text-blue-200"
+                  {...registerForm.register("email")}
                 />
+                {registerForm.formState.errors.email && (
+                  <p className="text-red-400 text-sm">{registerForm.formState.errors.email.message}</p>
+                )}
               </div>
+
               <div className="space-y-2">
-                <Label htmlFor="signup-password" className="text-white">Password</Label>
-                <Input 
-                  id="signup-password" 
-                  type="password" 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required 
-                  className="bg-white/10 border-white/20 text-white placeholder:text-blue-200 focus:border-blue-400"
-                />
-                {password && (
+                <Label htmlFor="reg-password" className="text-white">Password</Label>
+                <div className="relative">
+                  <Input
+                    id="reg-password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Create a password"
+                    className="bg-white/10 border-white/20 text-white placeholder:text-blue-200 pr-10"
+                    {...registerForm.register("password", {
+                      onChange: (e) => handlePasswordChange(e.target.value)
+                    })}
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-200 hover:text-white"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+                {registerForm.formState.errors.password && (
+                  <p className="text-red-400 text-sm">{registerForm.formState.errors.password.message}</p>
+                )}
+                
+                {passwordStrength && (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-blue-200">Strength:</span>
-                      <span className={`text-sm font-medium ${
-                        passwordStrength.score >= 3 ? 'text-green-300' : 
-                        passwordStrength.score >= 2 ? 'text-yellow-300' : 'text-red-300'
-                      }`}>
-                        {passwordStrength.score === 0 ? 'Very Weak' :
-                         passwordStrength.score === 1 ? 'Weak' :
-                         passwordStrength.score === 2 ? 'Medium' :
-                         passwordStrength.score === 3 ? 'Strong' : 'Very Strong'}
+                      <span className={`text-sm font-medium ${getStrengthColor(passwordStrength.score)}`}>
+                        {getStrengthLabel(passwordStrength.score)}
                       </span>
                     </div>
-                    {!isPasswordValid && (
-                      <Alert className="bg-red-500/20 border-red-400/50">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertDescription className="text-red-200">
-                          Password must be at least medium strength
-                        </AlertDescription>
-                      </Alert>
+                    <div className="w-full bg-white/20 rounded-full h-2">
+                      <div 
+                        className={`h-2 rounded-full transition-all ${
+                          passwordStrength.score >= 3 ? 'bg-green-500' : 
+                          passwordStrength.score >= 2 ? 'bg-yellow-500' : 'bg-red-500'
+                        }`}
+                        style={{ width: `${(passwordStrength.score + 1) * 20}%` }}
+                      />
+                    </div>
+                    {passwordStrength.feedback.suggestions.length > 0 && (
+                      <div className="text-xs text-blue-200">
+                        {passwordStrength.feedback.suggestions[0]}
+                      </div>
                     )}
                   </div>
                 )}
               </div>
+
               <div className="space-y-2">
                 <Label htmlFor="confirm-password" className="text-white">Confirm Password</Label>
-                <Input 
-                  id="confirm-password" 
-                  type="password" 
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required 
-                  className="bg-white/10 border-white/20 text-white placeholder:text-blue-200 focus:border-blue-400"
-                />
+                <div className="relative">
+                  <Input
+                    id="confirm-password"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Confirm your password"
+                    className="bg-white/10 border-white/20 text-white placeholder:text-blue-200 pr-10"
+                    {...registerForm.register("confirmPassword")}
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-200 hover:text-white"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  >
+                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+                {registerForm.formState.errors.confirmPassword && (
+                  <p className="text-red-400 text-sm">{registerForm.formState.errors.confirmPassword.message}</p>
+                )}
               </div>
-            </CardContent>
-            <CardFooter>
+
               <Button 
                 type="submit" 
-                className="w-full bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white shadow-lg" 
-                disabled={isFormLoading || !isPasswordValid}
+                className="w-full bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500"
+                disabled={isLoading}
               >
-                {isFormLoading ? "Creating Account..." : "Create Secure Account"}
+                {isLoading ? "Creating account..." : "Create Account"}
               </Button>
-            </CardFooter>
-          </form>
-        </TabsContent>
-      </Tabs>
+            </form>
+          </TabsContent>
+
+          <TabsContent value="forgot" className="space-y-4 mt-6">
+            <form onSubmit={forgotPasswordForm.handleSubmit(handleForgotPassword)} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="forgot-email" className="text-white">Email</Label>
+                <Input
+                  id="forgot-email"
+                  type="email"
+                  placeholder="Enter your email"
+                  className="bg-white/10 border-white/20 text-white placeholder:text-blue-200"
+                  {...forgotPasswordForm.register("email")}
+                />
+                {forgotPasswordForm.formState.errors.email && (
+                  <p className="text-red-400 text-sm">{forgotPasswordForm.formState.errors.email.message}</p>
+                )}
+              </div>
+
+              <Button 
+                type="submit" 
+                className="w-full bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500"
+                disabled={isLoading}
+              >
+                {isLoading ? "Sending..." : "Send Reset Link"}
+              </Button>
+            </form>
+          </TabsContent>
+        </Tabs>
+      </CardContent>
     </Card>
   );
 };
