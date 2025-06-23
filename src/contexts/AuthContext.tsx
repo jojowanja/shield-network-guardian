@@ -70,14 +70,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       setIsLoading(true);
       if (isDemo) {
-        // In demo mode, clear user first then set after a brief delay to simulate auth
-        setUser(null);
-        setSession(null);
-        setTimeout(() => {
-          setUser(mockUser as User);
-          setSession(mockSession as Session);
-          setIsLoading(false);
-        }, 500);
+        // In demo mode, simulate authentication delay
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        // Create enhanced mock user with better data
+        const enhancedMockUser = {
+          ...mockUser,
+          email,
+          user_metadata: { 
+            name: email.split('@')[0],
+            full_name: email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1),
+            avatar_url: `https://api.dicebear.com/7.x/initials/svg?seed=${email}`
+          }
+        };
+        
+        setUser(enhancedMockUser as User);
+        setSession({ ...mockSession, user: enhancedMockUser } as Session);
+        setIsLoading(false);
         return;
       }
       const { data, error } = await supabase!.auth.signInWithPassword({
