@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Download, FileText, FileSpreadsheet, File, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 interface DownloadItem {
   id: string;
@@ -19,6 +19,7 @@ interface DownloadItem {
 
 export const DownloadsManager = () => {
   const [downloads, setDownloads] = useState<DownloadItem[]>([]);
+  const navigate = useNavigate();
 
   const simulateDownload = (filename: string, type: DownloadItem["type"]) => {
     const newDownload: DownloadItem = {
@@ -57,6 +58,11 @@ export const DownloadsManager = () => {
   const deleteDownload = (id: string) => {
     setDownloads(prev => prev.filter(download => download.id !== id));
     toast.info("Download removed");
+  };
+
+  const handleExportConfig = () => {
+    toast.info("Redirecting to export page...");
+    navigate("/export");
   };
 
   const getFileIcon = (type: string) => {
@@ -107,7 +113,7 @@ export const DownloadsManager = () => {
             <Button 
               size="sm" 
               variant="outline"
-              onClick={() => simulateDownload("security-config.json", "config")}
+              onClick={handleExportConfig}
             >
               Export Config
             </Button>
