@@ -1,13 +1,13 @@
 
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { SmartGuestAccess } from "@/components/SmartGuestAccess";
+import { SmartGuestAccessEnhanced } from "@/components/SmartGuestAccessEnhanced";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 const GuestAccessPage = () => {
   return (
     <ProtectedRoute>
       <DashboardLayout>
-        <SmartGuestAccess />
+        <SmartGuestAccessEnhanced />
       </DashboardLayout>
     </ProtectedRoute>
   );
