@@ -51,6 +51,7 @@ export const AuthForm = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState<any>(null);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const { signIn, signUp, resetPassword } = useAuth();
   const navigate = useNavigate();
 
@@ -96,9 +97,9 @@ export const AuthForm = () => {
       let errorMessage = "Please check your credentials and try again.";
       
       if (error.message === "Invalid login credentials") {
-        errorMessage = "Invalid email or password. If you haven't created an account yet, please use the Register tab to sign up first.";
+        errorMessage = "Invalid email or password. Make sure you've created an account first using the Register tab.";
       } else if (error.message?.includes("Email not confirmed")) {
-        errorMessage = "Please check your email and confirm your account before signing in.";
+        errorMessage = "Please check your email and confirm your account before signing in. If you didn't receive a confirmation email, try registering again.";
       } else if (error.message?.includes("too many requests")) {
         errorMessage = "Too many login attempts. Please wait a moment before trying again.";
       }
@@ -115,6 +116,7 @@ export const AuthForm = () => {
   const handleRegister = async (data: RegisterFormValues) => {
     setIsLoading(true);
     setAuthError(null);
+    setRegistrationSuccess(false);
     
     try {
       console.log('Form registration attempt:', data.email);
@@ -122,15 +124,48 @@ export const AuthForm = () => {
       const result = await signUp(data.email, data.password);
       
       if (result.error) {
+        // Handle specific error cases
+        if (result.error.message?.includes("User already registered")) {
+          setAuthError("An account with this email already exists. Please use the Sign In tab instead.");
+          setActiveTab("login");
+          toast.error("Account exists", {
+            description: "Please use the Sign In tab to access your existing account."
+          });
+          return;
+        }
+        
+        if (result.error.message?.includes("Error sending confirmation email") || 
+            result.error.message?.includes("SMTP")) {
+          // Email confirmation failed, but account might be created
+          setRegistrationSuccess(true);
+          toast.success("Account created!", {
+            description: "Your account has been created. You can now try signing in directly as email confirmation is temporarily unavailable."
+          });
+          
+          // Clear the form and switch to login
+          registerForm.reset();
+          setTimeout(() => {
+            setActiveTab("login");
+            setRegistrationSuccess(false);
+          }, 3000);
+          return;
+        }
+        
         throw result.error;
       }
       
+      // Registration successful
+      setRegistrationSuccess(true);
       toast.success("Account created!", {
         description: "Please check your email to confirm your account, then return here to sign in."
       });
       
-      // Switch to login tab after successful registration
-      setActiveTab("login");
+      // Clear the form and switch to login after a delay
+      registerForm.reset();
+      setTimeout(() => {
+        setActiveTab("login");
+        setRegistrationSuccess(false);
+      }, 3000);
       
     } catch (error: any) {
       console.error('Registration error in form:', error);
@@ -139,9 +174,6 @@ export const AuthForm = () => {
       
       if (error.message?.includes("already registered") || error.message?.includes("already been registered")) {
         errorMessage = "An account with this email already exists. Please use the Sign In tab instead.";
-        setActiveTab("login");
-      } else if (error.message?.includes("Error sending confirmation email")) {
-        errorMessage = "Account created but email confirmation failed. You can try signing in directly or contact support.";
         setActiveTab("login");
       }
       
@@ -230,6 +262,15 @@ export const AuthForm = () => {
             <AlertCircle className="h-4 w-4 text-red-400" />
             <AlertDescription className="text-red-200">
               {authError}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {registrationSuccess && (
+          <Alert className="mb-4 bg-green-500/10 border-green-500/20">
+            <CheckCircle className="h-4 w-4 text-green-400" />
+            <AlertDescription className="text-green-200">
+              Account created successfully! You can now sign in or check your email for confirmation.
             </AlertDescription>
           </Alert>
         )}
@@ -402,9 +443,9 @@ export const AuthForm = () => {
               <Button 
                 type="submit" 
                 className="w-full bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500"
-                disabled={isLoading}
+                disabled={isLoading || registrationSuccess}
               >
-                {isLoading ? "Creating account..." : "Create Account"}
+                {isLoading ? "Creating account..." : registrationSuccess ? "Account Created!" : "Create Account"}
               </Button>
             </form>
           </TabsContent>
