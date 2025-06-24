@@ -11,7 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Eye, EyeOff, AlertCircle, CheckCircle } from "lucide-react";
+import { Eye, EyeOff, AlertCircle, CheckCircle, Info } from "lucide-react";
 import { checkPasswordStrength } from "@/utils/passwordUtils";
 
 // Enhanced password validation schema
@@ -50,6 +50,7 @@ export const AuthForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState<any>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
   const { signIn, signUp, resetPassword } = useAuth();
   const navigate = useNavigate();
 
@@ -70,6 +71,8 @@ export const AuthForm = () => {
 
   const handleLogin = async (data: LoginFormValues) => {
     setIsLoading(true);
+    setAuthError(null);
+    
     try {
       console.log('Form login attempt:', data.email);
       
@@ -93,11 +96,14 @@ export const AuthForm = () => {
       let errorMessage = "Please check your credentials and try again.";
       
       if (error.message === "Invalid login credentials") {
-        errorMessage = "Invalid email or password. Please check your credentials.";
+        errorMessage = "Invalid email or password. If you haven't created an account yet, please use the Register tab to sign up first.";
       } else if (error.message?.includes("Email not confirmed")) {
         errorMessage = "Please check your email and confirm your account before signing in.";
+      } else if (error.message?.includes("too many requests")) {
+        errorMessage = "Too many login attempts. Please wait a moment before trying again.";
       }
       
+      setAuthError(errorMessage);
       toast.error("Sign in failed", {
         description: errorMessage
       });
@@ -107,8 +113,10 @@ export const AuthForm = () => {
   };
 
   const handleRegister = async (data: RegisterFormValues) => {
+    setIsLoading(true);
+    setAuthError(null);
+    
     try {
-      setIsLoading(true);
       console.log('Form registration attempt:', data.email);
       
       const result = await signUp(data.email, data.password);
@@ -117,8 +125,8 @@ export const AuthForm = () => {
         throw result.error;
       }
       
-      toast.success("Account created successfully!", {
-        description: "Please check your email to confirm your account, then sign in."
+      toast.success("Account created!", {
+        description: "Please check your email to confirm your account, then return here to sign in."
       });
       
       // Switch to login tab after successful registration
@@ -127,13 +135,17 @@ export const AuthForm = () => {
     } catch (error: any) {
       console.error('Registration error in form:', error);
       
-      let errorMessage = "Please try again.";
+      let errorMessage = "Registration failed. Please try again.";
       
-      if (error.message?.includes("already registered")) {
-        errorMessage = "An account with this email already exists. Please sign in instead.";
+      if (error.message?.includes("already registered") || error.message?.includes("already been registered")) {
+        errorMessage = "An account with this email already exists. Please use the Sign In tab instead.";
+        setActiveTab("login");
+      } else if (error.message?.includes("Error sending confirmation email")) {
+        errorMessage = "Account created but email confirmation failed. You can try signing in directly or contact support.";
         setActiveTab("login");
       }
       
+      setAuthError(errorMessage);
       toast.error("Registration failed", {
         description: errorMessage
       });
@@ -143,8 +155,10 @@ export const AuthForm = () => {
   };
 
   const handleForgotPassword = async (data: ForgotPasswordFormValues) => {
+    setIsLoading(true);
+    setAuthError(null);
+    
     try {
-      setIsLoading(true);
       console.log('Password reset attempt:', data.email);
       
       const result = await resetPassword(data.email);
@@ -161,8 +175,10 @@ export const AuthForm = () => {
     } catch (error: any) {
       console.error('Password reset error in form:', error);
       
+      const errorMessage = error.message || "Password reset failed. Please try again.";
+      setAuthError(errorMessage);
       toast.error("Reset failed", {
-        description: error.message || "Please try again."
+        description: errorMessage
       });
     } finally {
       setIsLoading(false);
@@ -209,6 +225,15 @@ export const AuthForm = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {authError && (
+          <Alert className="mb-4 bg-red-500/10 border-red-500/20">
+            <AlertCircle className="h-4 w-4 text-red-400" />
+            <AlertDescription className="text-red-200">
+              {authError}
+            </AlertDescription>
+          </Alert>
+        )}
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3 bg-white/10">
             <TabsTrigger value="login" className="text-white data-[state=active]:bg-white data-[state=active]:text-blue-900">
@@ -223,6 +248,13 @@ export const AuthForm = () => {
           </TabsList>
 
           <TabsContent value="login" className="space-y-4 mt-6">
+            <Alert className="bg-blue-500/10 border-blue-500/20">
+              <Info className="h-4 w-4 text-blue-400" />
+              <AlertDescription className="text-blue-200">
+                Don't have an account? Use the Register tab to create one first.
+              </AlertDescription>
+            </Alert>
+            
             <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-white">Email</Label>
@@ -272,6 +304,13 @@ export const AuthForm = () => {
           </TabsContent>
 
           <TabsContent value="register" className="space-y-4 mt-6">
+            <Alert className="bg-green-500/10 border-green-500/20">
+              <CheckCircle className="h-4 w-4 text-green-400" />
+              <AlertDescription className="text-green-200">
+                Create your account to access the Shield network protection dashboard.
+              </AlertDescription>
+            </Alert>
+            
             <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="reg-email" className="text-white">Email</Label>
