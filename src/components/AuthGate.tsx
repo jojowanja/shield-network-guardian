@@ -13,16 +13,24 @@ export const AuthGate = ({ children }: AuthGateProps) => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log('AuthGate check:', { 
+      user: user?.email || 'No user', 
+      isLoading, 
+      pathname: location.pathname 
+    });
+
     if (!isLoading) {
       const isAuthPage = location.pathname === "/auth";
       const isWelcomePage = location.pathname === "/welcome";
       
       if (!user && !isAuthPage && !isWelcomePage) {
         // User not authenticated, redirect to auth
+        console.log('Redirecting to auth page - user not authenticated');
         navigate("/auth", { replace: true });
       } else if (user && isAuthPage) {
-        // User authenticated but on auth page, redirect to welcome
-        navigate("/welcome", { replace: true });
+        // User authenticated but on auth page, redirect to home
+        console.log('Redirecting to home - user already authenticated');
+        navigate("/", { replace: true });
       }
     }
   }, [user, isLoading, location.pathname, navigate]);
@@ -37,11 +45,6 @@ export const AuthGate = ({ children }: AuthGateProps) => {
         </div>
       </div>
     );
-  }
-
-  // If user is not authenticated and not on auth/welcome pages, don't render children
-  if (!user && location.pathname !== "/auth" && location.pathname !== "/welcome") {
-    return null;
   }
 
   return <>{children}</>;

@@ -38,7 +38,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Function to sign up
   const signUp = async (email: string, password: string, userData?: any) => {
     try {
-      setIsLoading(true);
       console.log('Attempting to sign up user:', email);
       
       const { data, error } = await supabase.auth.signUp({
@@ -60,15 +59,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (error: any) {
       console.error("Error signing up:", error);
       return { error };
-    } finally {
-      setIsLoading(false);
     }
   };
 
   // Function to sign in
   const signIn = async (email: string, password: string) => {
     try {
-      setIsLoading(true);
       console.log('Attempting to sign in user:', email);
       
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -90,9 +86,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           .from('profiles')
           .select('id')
           .eq('id', data.user.id)
-          .single();
+          .maybeSingle();
         
-        if (profileError && profileError.code === 'PGRST116') {
+        if (!profile) {
           // No profile found, this is a new user
           isFirstTime = true;
         }
@@ -110,8 +106,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (error) {
       console.error("Error signing in:", error);
       throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -145,7 +139,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       if (error) {
         console.error("Session refresh error:", error);
-        throw error;
+        return;
       }
       
       console.log('Session refreshed:', data.session ? 'Active' : 'None');
@@ -183,10 +177,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     console.log('Setting up auth state listener...');
     
-    // Get initial session
-    refreshSession();
-    
-    // Set up auth state change listener
+    // Set up auth state change listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log('Auth event:', event, session?.user?.email || 'No user');
@@ -195,7 +186,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(session?.user || null);
         setIsLoading(false);
         
-        // Log sign-in event for notifications
+        // Log sign-in event for notifications (defer to avoid blocking)
         if (event === 'SIGNED_IN' && session?.user) {
           setTimeout(async () => {
             try {
@@ -216,6 +207,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       }
     );
+
+    // Then get initial session
+    refreshSession();
 
     // Clean up subscription
     return () => {

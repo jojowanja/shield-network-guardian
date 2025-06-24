@@ -69,8 +69,8 @@ export const AuthForm = () => {
   });
 
   const handleLogin = async (data: LoginFormValues) => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
       console.log('Form login attempt:', data.email);
       
       const result = await signIn(data.email, data.password);
@@ -81,6 +81,7 @@ export const AuthForm = () => {
 
       console.log('Login successful, redirecting...', result);
       
+      // Let AuthGate handle the redirect based on user state
       if (result.shouldRedirectToWelcome) {
         navigate("/welcome");
       } else {
