@@ -39,19 +39,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signUp = async (email: string, password: string, userData?: any) => {
     try {
       setIsLoading(true);
-      const redirectUrl = `${window.location.origin}/welcome`;
+      console.log('Attempting to sign up user:', email);
       
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: redirectUrl,
+          emailRedirectTo: `${window.location.origin}/welcome`,
           data: userData
         }
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Sign up error:", error);
+        throw error;
+      }
       
+      console.log('Sign up successful:', data);
       return { error: null };
     } catch (error: any) {
       console.error("Error signing up:", error);
@@ -65,22 +69,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
+      console.log('Attempting to sign in user:', email);
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Sign in error:", error);
+        throw error;
+      }
+      
+      console.log('Sign in successful:', data);
       
       // Check if this is a new user by checking if they have a profile
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', data.user.id)
-        .single();
+      let isFirstTime = false;
+      try {
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', data.user.id)
+          .single();
+        
+        if (profileError && profileError.code === 'PGRST116') {
+          // No profile found, this is a new user
+          isFirstTime = true;
+        }
+        
+        console.log('Profile check result:', { profile, isFirstTime });
+      } catch (profileError) {
+        console.error('Error checking profile:', profileError);
+        // Assume not a new user if we can't check
+        isFirstTime = false;
+      }
       
-      const isFirstTime = !profile;
       setIsNewUser(isFirstTime);
       
       return { shouldRedirectToWelcome: isFirstTime };
@@ -95,14 +118,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Function to reset password
   const resetPassword = async (email: string) => {
     try {
-      const redirectUrl = `${window.location.origin}/auth?mode=reset`;
+      console.log('Attempting password reset for:', email);
       
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: redirectUrl,
+        redirectTo: `${window.location.origin}/auth?mode=reset`,
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Password reset error:", error);
+        throw error;
+      }
       
+      console.log('Password reset email sent successfully');
       return { error: null };
     } catch (error: any) {
       console.error("Error resetting password:", error);
@@ -113,9 +140,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Function to refresh the session
   const refreshSession = async () => {
     try {
+      console.log('Refreshing session...');
       const { data, error } = await supabase.auth.getSession();
-      if (error) throw error;
       
+      if (error) {
+        console.error("Session refresh error:", error);
+        throw error;
+      }
+      
+      console.log('Session refreshed:', data.session ? 'Active' : 'None');
       setSession(data.session);
       setUser(data.session?.user || null);
     } catch (error) {
@@ -130,9 +163,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Function to sign out
   const signOut = async () => {
     try {
+      console.log('Signing out user...');
       const { error } = await supabase.auth.signOut();
-      if (error) throw error;
       
+      if (error) {
+        console.error("Sign out error:", error);
+        throw error;
+      }
+      
+      console.log('Sign out successful');
       setSession(null);
       setUser(null);
       setIsNewUser(false);
@@ -142,13 +181,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
+    console.log('Setting up auth state listener...');
+    
     // Get initial session
     refreshSession();
     
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth event:', event, session?.user?.email);
+      (event, session) => {
+        console.log('Auth event:', event, session?.user?.email || 'No user');
         
         setSession(session);
         setUser(session?.user || null);
@@ -156,26 +197,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         // Log sign-in event for notifications
         if (event === 'SIGNED_IN' && session?.user) {
-          try {
-            // Create a sign-in notification entry
-            await supabase.from('security_events').insert({
-              user_id: session.user.id,
-              event_type: 'other',
-              severity: 'low',
-              description: `User signed in from ${navigator.userAgent.includes('Chrome') ? 'Chrome' : 'Browser'} at ${new Date().toLocaleString()}`,
-              resolved: true
-            });
-            
-            console.log('Sign-in event logged for email notifications');
-          } catch (error) {
-            console.error('Error logging sign-in event:', error);
-          }
+          setTimeout(async () => {
+            try {
+              console.log('Logging sign-in event for notifications...');
+              await supabase.from('security_events').insert({
+                user_id: session.user.id,
+                event_type: 'other',
+                severity: 'low',
+                description: `User signed in from ${navigator.userAgent.includes('Chrome') ? 'Chrome' : 'Browser'} at ${new Date().toLocaleString()}`,
+                resolved: true
+              });
+              
+              console.log('Sign-in event logged successfully');
+            } catch (error) {
+              console.error('Error logging sign-in event:', error);
+            }
+          }, 0);
         }
       }
     );
 
     // Clean up subscription
     return () => {
+      console.log('Cleaning up auth subscription...');
       subscription.unsubscribe();
     };
   }, []);

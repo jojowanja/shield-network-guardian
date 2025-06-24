@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -51,7 +50,7 @@ export const AuthForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState<any>(null);
-  const { signIn } = useAuth();
+  const { signIn, signUp, resetPassword } = useAuth();
   const navigate = useNavigate();
 
   const loginForm = useForm<LoginFormValues>({
@@ -72,20 +71,34 @@ export const AuthForm = () => {
   const handleLogin = async (data: LoginFormValues) => {
     try {
       setIsLoading(true);
+      console.log('Form login attempt:', data.email);
+      
       const result = await signIn(data.email, data.password);
       
       toast.success("Welcome back!", {
         description: "You have successfully signed in."
       });
 
+      console.log('Login successful, redirecting...', result);
+      
       if (result.shouldRedirectToWelcome) {
         navigate("/welcome");
       } else {
         navigate("/");
       }
     } catch (error: any) {
+      console.error('Login error in form:', error);
+      
+      let errorMessage = "Please check your credentials and try again.";
+      
+      if (error.message === "Invalid login credentials") {
+        errorMessage = "Invalid email or password. Please check your credentials.";
+      } else if (error.message?.includes("Email not confirmed")) {
+        errorMessage = "Please check your email and confirm your account before signing in.";
+      }
+      
       toast.error("Sign in failed", {
-        description: error.message || "Please check your credentials and try again."
+        description: errorMessage
       });
     } finally {
       setIsLoading(false);
@@ -95,21 +108,33 @@ export const AuthForm = () => {
   const handleRegister = async (data: RegisterFormValues) => {
     try {
       setIsLoading(true);
+      console.log('Form registration attempt:', data.email);
       
-      // In demo mode, simulate registration
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const result = await signUp(data.email, data.password);
+      
+      if (result.error) {
+        throw result.error;
+      }
       
       toast.success("Account created successfully!", {
-        description: "Welcome to Shield Network Guardian"
+        description: "Please check your email to confirm your account, then sign in."
       });
       
-      // Auto-sign them in
-      const result = await signIn(data.email, data.password);
-      navigate(result.shouldRedirectToWelcome ? "/welcome" : "/");
+      // Switch to login tab after successful registration
+      setActiveTab("login");
       
     } catch (error: any) {
+      console.error('Registration error in form:', error);
+      
+      let errorMessage = "Please try again.";
+      
+      if (error.message?.includes("already registered")) {
+        errorMessage = "An account with this email already exists. Please sign in instead.";
+        setActiveTab("login");
+      }
+      
       toast.error("Registration failed", {
-        description: error.message || "Please try again."
+        description: errorMessage
       });
     } finally {
       setIsLoading(false);
@@ -119,9 +144,13 @@ export const AuthForm = () => {
   const handleForgotPassword = async (data: ForgotPasswordFormValues) => {
     try {
       setIsLoading(true);
+      console.log('Password reset attempt:', data.email);
       
-      // In demo mode, simulate password reset
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const result = await resetPassword(data.email);
+      
+      if (result.error) {
+        throw result.error;
+      }
       
       toast.success("Reset link sent!", {
         description: "Check your email for password reset instructions."
@@ -129,6 +158,8 @@ export const AuthForm = () => {
       
       setActiveTab("login");
     } catch (error: any) {
+      console.error('Password reset error in form:', error);
+      
       toast.error("Reset failed", {
         description: error.message || "Please try again."
       });
