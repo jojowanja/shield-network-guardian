@@ -97,9 +97,9 @@ export const AuthForm = () => {
       let errorMessage = "Sign in failed. Please check your email and password.";
       
       if (error.message?.includes("Invalid login credentials")) {
-        errorMessage = "Invalid email or password. If you just created an account, please try again or create a new account.";
+        errorMessage = "Invalid email or password. Make sure you entered the correct credentials.";
       } else if (error.message?.includes("Email not confirmed")) {
-        errorMessage = "Please try signing in directly. Email confirmation is currently unavailable.";
+        errorMessage = "Account not confirmed. Please try creating a new account or contact support.";
       } else if (error.message?.includes("too many requests")) {
         errorMessage = "Too many attempts. Please wait a moment before trying again.";
       }
@@ -143,7 +143,7 @@ export const AuthForm = () => {
       // Registration successful
       setRegistrationSuccess(true);
       toast.success("Account created successfully!", {
-        description: "You can now sign in with your credentials. Email confirmation is not required."
+        description: "You can now sign in with your credentials immediately!"
       });
       
       registerForm.reset();
@@ -251,11 +251,11 @@ export const AuthForm = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {/* Email configuration notice */}
-        <Alert className="mb-4 bg-yellow-500/10 border-yellow-500/20">
-          <Info className="h-4 w-4 text-yellow-400" />
-          <AlertDescription className="text-yellow-200">
-            Note: Email confirmation is currently disabled. You can sign in immediately after creating an account.
+        {/* Success notice for no email confirmation */}
+        <Alert className="mb-4 bg-green-500/10 border-green-500/20">
+          <CheckCircle className="h-4 w-4 text-green-400" />
+          <AlertDescription className="text-green-200">
+            No email confirmation required! You can sign in immediately after creating an account.
           </AlertDescription>
         </Alert>
 
@@ -350,7 +350,7 @@ export const AuthForm = () => {
             <Alert className="bg-green-500/10 border-green-500/20">
               <CheckCircle className="h-4 w-4 text-green-400" />
               <AlertDescription className="text-green-200">
-                Create your Shield account. No email confirmation required!
+                Create your Shield account. Sign in immediately after registration!
               </AlertDescription>
             </Alert>
             

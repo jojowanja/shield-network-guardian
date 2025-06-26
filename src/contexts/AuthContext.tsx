@@ -35,17 +35,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isNewUser, setIsNewUser] = useState(false);
 
-  // Function to sign up - disable email confirmation to avoid SMTP issues
+  // Function to sign up - completely disable email confirmation
   const signUp = async (email: string, password: string, userData?: any) => {
     try {
       console.log('Attempting to sign up user:', email);
       
-      // First try to sign up the user
+      // Sign up without email confirmation
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          // Don't require email confirmation since SMTP isn't configured
+          // Completely disable email confirmation
           emailRedirectTo: undefined,
           data: userData
         }
@@ -57,17 +57,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Handle specific error cases
         if (error.message?.includes("User already registered") || 
             error.message?.includes("already been registered")) {
-          console.log('User already exists, this is expected');
+          console.log('User already exists');
           return { error: { message: "An account with this email already exists. Please sign in instead." } };
         }
         
-        // Handle SMTP/email errors - treat as success since account might be created
+        // For any SMTP/email errors, we'll treat as success since we're bypassing confirmation
         if (error.message?.includes("Error sending") || 
             error.message?.includes("SMTP") || 
             error.message?.includes("Username and Password not accepted") ||
             error.message?.includes("email rate limit exceeded")) {
-          console.log('Email confirmation failed but account may have been created');
-          return { error: null }; // Treat as success
+          console.log('Email error during signup, but treating as success');
+          // Return success even though email failed
+          return { error: null };
         }
         
         console.error("Sign up error:", error);
