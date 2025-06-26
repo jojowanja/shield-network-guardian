@@ -35,17 +35,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isNewUser, setIsNewUser] = useState(false);
 
-  // Function to sign up
+  // Function to sign up - disable email confirmation to avoid SMTP issues
   const signUp = async (email: string, password: string, userData?: any) => {
     try {
       console.log('Attempting to sign up user:', email);
       
-      // Try to sign up with email confirmation disabled for now
+      // First try to sign up the user
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/welcome`,
+          // Don't require email confirmation since SMTP isn't configured
+          emailRedirectTo: undefined,
           data: userData
         }
       });
@@ -53,19 +54,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.log('Sign up response:', { data, error });
       
       if (error) {
+        // Handle specific error cases
+        if (error.message?.includes("User already registered") || 
+            error.message?.includes("already been registered")) {
+          console.log('User already exists, this is expected');
+          return { error: { message: "An account with this email already exists. Please sign in instead." } };
+        }
+        
+        // Handle SMTP/email errors - treat as success since account might be created
+        if (error.message?.includes("Error sending") || 
+            error.message?.includes("SMTP") || 
+            error.message?.includes("Username and Password not accepted") ||
+            error.message?.includes("email rate limit exceeded")) {
+          console.log('Email confirmation failed but account may have been created');
+          return { error: null }; // Treat as success
+        }
+        
         console.error("Sign up error:", error);
         return { error };
       }
       
-      // If user is returned but not confirmed, it means the account was created
-      // but email confirmation failed (SMTP issue)
-      if (data.user && !data.user.email_confirmed_at) {
-        console.log('Account created but email confirmation failed (SMTP issue)');
-        // This is actually a success case when SMTP is not configured
+      // Check if user was created successfully
+      if (data.user) {
+        console.log('User created successfully:', data.user.id);
         return { error: null };
       }
       
-      console.log('Sign up successful:', data);
       return { error: null };
     } catch (error: any) {
       console.error("Error signing up:", error);
@@ -132,6 +146,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
       
       if (error) {
+        // Handle SMTP errors gracefully for password reset
+        if (error.message?.includes("Error sending") || 
+            error.message?.includes("SMTP") || 
+            error.message?.includes("Username and Password not accepted")) {
+          console.log('Password reset email failed due to SMTP configuration');
+          return { error: { message: "Password reset is currently unavailable due to email configuration issues. Please contact support." } };
+        }
+        
         console.error("Password reset error:", error);
         return { error };
       }

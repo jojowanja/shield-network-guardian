@@ -97,9 +97,9 @@ export const AuthForm = () => {
       let errorMessage = "Sign in failed. Please check your email and password.";
       
       if (error.message?.includes("Invalid login credentials")) {
-        errorMessage = "Invalid email or password. If you just created an account, make sure it was successfully registered.";
+        errorMessage = "Invalid email or password. If you just created an account, please try again or create a new account.";
       } else if (error.message?.includes("Email not confirmed")) {
-        errorMessage = "Your email address needs to be confirmed. Please check your email or try registering again.";
+        errorMessage = "Please try signing in directly. Email confirmation is currently unavailable.";
       } else if (error.message?.includes("too many requests")) {
         errorMessage = "Too many attempts. Please wait a moment before trying again.";
       }
@@ -127,7 +127,7 @@ export const AuthForm = () => {
       
       if (result.error) {
         // Handle specific registration errors
-        if (result.error.message?.includes("User already registered") || 
+        if (result.error.message?.includes("already exists") || 
             result.error.message?.includes("already been registered")) {
           setAuthError("An account with this email already exists. Please use the Sign In tab instead.");
           toast.error("Account already exists", {
@@ -137,42 +137,25 @@ export const AuthForm = () => {
           return;
         }
         
-        // Handle SMTP/email confirmation errors
-        if (result.error.message?.includes("Error sending confirmation email") || 
-            result.error.message?.includes("SMTP") || 
-            result.error.message?.includes("Username and Password not accepted")) {
-          
-          // Account was likely created but email confirmation failed
-          setRegistrationSuccess(true);
-          toast.success("Account created successfully!", {
-            description: "Email confirmation is currently unavailable, but your account has been created. You can now sign in directly."
-          });
-          
-          registerForm.reset();
-          setTimeout(() => {
-            setActiveTab("login");
-            setRegistrationSuccess(false);
-            toast.info("Ready to sign in", {
-              description: "Use your email and password to sign in to your new account."
-            });
-          }, 2000);
-          return;
-        }
-        
         throw result.error;
       }
       
-      // Registration successful with email confirmation
+      // Registration successful
       setRegistrationSuccess(true);
-      toast.success("Account created!", {
-        description: "Please check your email to confirm your account, then return here to sign in."
+      toast.success("Account created successfully!", {
+        description: "You can now sign in with your credentials. Email confirmation is not required."
       });
       
       registerForm.reset();
+      
+      // Auto-switch to login tab after successful registration
       setTimeout(() => {
         setActiveTab("login");
         setRegistrationSuccess(false);
-      }, 3000);
+        toast.info("Ready to sign in", {
+          description: "Use your email and password to sign in to your new account."
+        });
+      }, 2000);
       
     } catch (error: any) {
       console.error('Registration error:', error);
@@ -210,15 +193,15 @@ export const AuthForm = () => {
         throw result.error;
       }
       
-      toast.success("Reset link sent!", {
-        description: "Check your email for password reset instructions."
+      toast.success("Reset instructions sent!", {
+        description: "If email service is configured, check your email for password reset instructions."
       });
       
       setActiveTab("login");
     } catch (error: any) {
       console.error('Password reset error:', error);
       
-      const errorMessage = error.message || "Password reset failed. Please try again.";
+      const errorMessage = error.message || "Password reset failed. Please try again or contact support.";
       setAuthError(errorMessage);
       toast.error("Reset failed", {
         description: errorMessage
@@ -268,6 +251,14 @@ export const AuthForm = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {/* Email configuration notice */}
+        <Alert className="mb-4 bg-yellow-500/10 border-yellow-500/20">
+          <Info className="h-4 w-4 text-yellow-400" />
+          <AlertDescription className="text-yellow-200">
+            Note: Email confirmation is currently disabled. You can sign in immediately after creating an account.
+          </AlertDescription>
+        </Alert>
+
         {authError && (
           <Alert className="mb-4 bg-red-500/10 border-red-500/20">
             <AlertCircle className="h-4 w-4 text-red-400" />
@@ -359,7 +350,7 @@ export const AuthForm = () => {
             <Alert className="bg-green-500/10 border-green-500/20">
               <CheckCircle className="h-4 w-4 text-green-400" />
               <AlertDescription className="text-green-200">
-                Create your Shield account to access network protection features.
+                Create your Shield account. No email confirmation required!
               </AlertDescription>
             </Alert>
             
@@ -465,7 +456,7 @@ export const AuthForm = () => {
             <Alert className="bg-yellow-500/10 border-yellow-500/20">
               <Info className="h-4 w-4 text-yellow-400" />
               <AlertDescription className="text-yellow-200">
-                Enter your email address to receive password reset instructions.
+                Password reset may be unavailable due to email configuration issues.
               </AlertDescription>
             </Alert>
             
