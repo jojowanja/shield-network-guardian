@@ -40,6 +40,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       console.log('Attempting to sign up user:', email);
       
+      // Try to sign up with email confirmation disabled for now
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -49,9 +50,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       });
       
+      console.log('Sign up response:', { data, error });
+      
       if (error) {
         console.error("Sign up error:", error);
-        throw error;
+        return { error };
+      }
+      
+      // If user is returned but not confirmed, it means the account was created
+      // but email confirmation failed (SMTP issue)
+      if (data.user && !data.user.email_confirmed_at) {
+        console.log('Account created but email confirmation failed (SMTP issue)');
+        // This is actually a success case when SMTP is not configured
+        return { error: null };
       }
       
       console.log('Sign up successful:', data);
@@ -88,15 +99,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           .eq('id', data.user.id)
           .maybeSingle();
         
-        if (!profile) {
-          // No profile found, this is a new user
-          isFirstTime = true;
+        if (profileError) {
+          console.error('Error checking profile:', profileError);
         }
         
-        console.log('Profile check result:', { profile, isFirstTime });
+        if (!profile) {
+          isFirstTime = true;
+          console.log('New user detected - no profile found');
+        }
+        
       } catch (profileError) {
         console.error('Error checking profile:', profileError);
-        // Assume not a new user if we can't check
         isFirstTime = false;
       }
       
@@ -120,7 +133,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       if (error) {
         console.error("Password reset error:", error);
-        throw error;
+        return { error };
       }
       
       console.log('Password reset email sent successfully');
@@ -139,6 +152,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       if (error) {
         console.error("Session refresh error:", error);
+        setSession(null);
+        setUser(null);
         return;
       }
       
@@ -177,17 +192,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     console.log('Setting up auth state listener...');
     
-    // Set up auth state change listener first
+    // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log('Auth event:', event, session?.user?.email || 'No user');
+        console.log('Auth state change:', event, session?.user?.email || 'No user');
         
         setSession(session);
         setUser(session?.user || null);
-        setIsLoading(false);
+        
+        if (!session) {
+          setIsLoading(false);
+        }
         
         // Log sign-in event for notifications (defer to avoid blocking)
         if (event === 'SIGNED_IN' && session?.user) {
+          setIsLoading(false);
           setTimeout(async () => {
             try {
               console.log('Logging sign-in event for notifications...');
@@ -205,10 +224,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
           }, 0);
         }
+        
+        if (event === 'SIGNED_OUT') {
+          setIsLoading(false);
+          setIsNewUser(false);
+        }
       }
     );
 
-    // Then get initial session
+    // Get initial session
     refreshSession();
 
     // Clean up subscription

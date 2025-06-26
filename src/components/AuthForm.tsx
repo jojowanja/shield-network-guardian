@@ -75,33 +75,33 @@ export const AuthForm = () => {
     setAuthError(null);
     
     try {
-      console.log('Form login attempt:', data.email);
+      console.log('Attempting login for:', data.email);
       
       const result = await signIn(data.email, data.password);
+      
+      console.log('Login result:', result);
       
       toast.success("Welcome back!", {
         description: "You have successfully signed in."
       });
 
-      console.log('Login successful, redirecting...', result);
-      
-      // Let AuthGate handle the redirect based on user state
+      // Navigate based on result
       if (result.shouldRedirectToWelcome) {
         navigate("/welcome");
       } else {
         navigate("/");
       }
     } catch (error: any) {
-      console.error('Login error in form:', error);
+      console.error('Login error:', error);
       
-      let errorMessage = "Please check your credentials and try again.";
+      let errorMessage = "Sign in failed. Please check your email and password.";
       
-      if (error.message === "Invalid login credentials") {
-        errorMessage = "Invalid email or password. Make sure you've created an account first using the Register tab.";
+      if (error.message?.includes("Invalid login credentials")) {
+        errorMessage = "Invalid email or password. If you just created an account, make sure it was successfully registered.";
       } else if (error.message?.includes("Email not confirmed")) {
-        errorMessage = "Please check your email and confirm your account before signing in. If you didn't receive a confirmation email, try registering again.";
+        errorMessage = "Your email address needs to be confirmed. Please check your email or try registering again.";
       } else if (error.message?.includes("too many requests")) {
-        errorMessage = "Too many login attempts. Please wait a moment before trying again.";
+        errorMessage = "Too many attempts. Please wait a moment before trying again.";
       }
       
       setAuthError(errorMessage);
@@ -119,48 +119,55 @@ export const AuthForm = () => {
     setRegistrationSuccess(false);
     
     try {
-      console.log('Form registration attempt:', data.email);
+      console.log('Attempting registration for:', data.email);
       
       const result = await signUp(data.email, data.password);
       
+      console.log('Registration result:', result);
+      
       if (result.error) {
-        // Handle specific error cases
-        if (result.error.message?.includes("User already registered")) {
+        // Handle specific registration errors
+        if (result.error.message?.includes("User already registered") || 
+            result.error.message?.includes("already been registered")) {
           setAuthError("An account with this email already exists. Please use the Sign In tab instead.");
-          setActiveTab("login");
-          toast.error("Account exists", {
+          toast.error("Account already exists", {
             description: "Please use the Sign In tab to access your existing account."
           });
+          setActiveTab("login");
           return;
         }
         
+        // Handle SMTP/email confirmation errors
         if (result.error.message?.includes("Error sending confirmation email") || 
-            result.error.message?.includes("SMTP")) {
-          // Email confirmation failed, but account might be created
+            result.error.message?.includes("SMTP") || 
+            result.error.message?.includes("Username and Password not accepted")) {
+          
+          // Account was likely created but email confirmation failed
           setRegistrationSuccess(true);
-          toast.success("Account created!", {
-            description: "Your account has been created. You can now try signing in directly as email confirmation is temporarily unavailable."
+          toast.success("Account created successfully!", {
+            description: "Email confirmation is currently unavailable, but your account has been created. You can now sign in directly."
           });
           
-          // Clear the form and switch to login
           registerForm.reset();
           setTimeout(() => {
             setActiveTab("login");
             setRegistrationSuccess(false);
-          }, 3000);
+            toast.info("Ready to sign in", {
+              description: "Use your email and password to sign in to your new account."
+            });
+          }, 2000);
           return;
         }
         
         throw result.error;
       }
       
-      // Registration successful
+      // Registration successful with email confirmation
       setRegistrationSuccess(true);
       toast.success("Account created!", {
         description: "Please check your email to confirm your account, then return here to sign in."
       });
       
-      // Clear the form and switch to login after a delay
       registerForm.reset();
       setTimeout(() => {
         setActiveTab("login");
@@ -168,13 +175,17 @@ export const AuthForm = () => {
       }, 3000);
       
     } catch (error: any) {
-      console.error('Registration error in form:', error);
+      console.error('Registration error:', error);
       
       let errorMessage = "Registration failed. Please try again.";
       
-      if (error.message?.includes("already registered") || error.message?.includes("already been registered")) {
+      if (error.message?.includes("already registered")) {
         errorMessage = "An account with this email already exists. Please use the Sign In tab instead.";
         setActiveTab("login");
+      } else if (error.message?.includes("weak password")) {
+        errorMessage = "Password is too weak. Please choose a stronger password.";
+      } else if (error.message?.includes("invalid email")) {
+        errorMessage = "Please enter a valid email address.";
       }
       
       setAuthError(errorMessage);
@@ -191,7 +202,7 @@ export const AuthForm = () => {
     setAuthError(null);
     
     try {
-      console.log('Password reset attempt:', data.email);
+      console.log('Password reset attempt for:', data.email);
       
       const result = await resetPassword(data.email);
       
@@ -205,7 +216,7 @@ export const AuthForm = () => {
       
       setActiveTab("login");
     } catch (error: any) {
-      console.error('Password reset error in form:', error);
+      console.error('Password reset error:', error);
       
       const errorMessage = error.message || "Password reset failed. Please try again.";
       setAuthError(errorMessage);
@@ -251,9 +262,9 @@ export const AuthForm = () => {
   return (
     <Card className="w-full max-w-md mx-auto bg-white/10 backdrop-blur-md border-white/20">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl text-white">Welcome</CardTitle>
+        <CardTitle className="text-2xl text-white">Welcome to Shield</CardTitle>
         <CardDescription className="text-blue-200">
-          Sign in to your account or create a new one
+          {activeTab === "login" ? "Sign in to your account" : activeTab === "register" ? "Create your Shield account" : "Reset your password"}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -270,7 +281,7 @@ export const AuthForm = () => {
           <Alert className="mb-4 bg-green-500/10 border-green-500/20">
             <CheckCircle className="h-4 w-4 text-green-400" />
             <AlertDescription className="text-green-200">
-              Account created successfully! You can now sign in or check your email for confirmation.
+              Registration successful! You can now sign in with your credentials.
             </AlertDescription>
           </Alert>
         )}
@@ -292,7 +303,7 @@ export const AuthForm = () => {
             <Alert className="bg-blue-500/10 border-blue-500/20">
               <Info className="h-4 w-4 text-blue-400" />
               <AlertDescription className="text-blue-200">
-                Don't have an account? Use the Register tab to create one first.
+                New to Shield? Use the Register tab to create your account first.
               </AlertDescription>
             </Alert>
             
@@ -348,7 +359,7 @@ export const AuthForm = () => {
             <Alert className="bg-green-500/10 border-green-500/20">
               <CheckCircle className="h-4 w-4 text-green-400" />
               <AlertDescription className="text-green-200">
-                Create your account to access the Shield network protection dashboard.
+                Create your Shield account to access network protection features.
               </AlertDescription>
             </Alert>
             
@@ -451,6 +462,13 @@ export const AuthForm = () => {
           </TabsContent>
 
           <TabsContent value="forgot" className="space-y-4 mt-6">
+            <Alert className="bg-yellow-500/10 border-yellow-500/20">
+              <Info className="h-4 w-4 text-yellow-400" />
+              <AlertDescription className="text-yellow-200">
+                Enter your email address to receive password reset instructions.
+              </AlertDescription>
+            </Alert>
+            
             <form onSubmit={forgotPasswordForm.handleSubmit(handleForgotPassword)} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="forgot-email" className="text-white">Email</Label>
@@ -480,3 +498,25 @@ export const AuthForm = () => {
     </Card>
   );
 };
+
+function getStrengthColor(score: number) {
+  switch(score) {
+    case 0: return "text-red-500";
+    case 1: return "text-orange-500";
+    case 2: return "text-yellow-500";
+    case 3: return "text-green-500";
+    case 4: return "text-green-700";
+    default: return "text-gray-500";
+  }
+}
+
+function getStrengthLabel(score: number) {
+  switch(score) {
+    case 0: return "Very Weak";
+    case 1: return "Weak";
+    case 2: return "Medium";
+    case 3: return "Strong";
+    case 4: return "Very Strong";
+    default: return "";
+  }
+}
