@@ -1,19 +1,8 @@
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { Session, User } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
-
-interface AuthContextType {
-  user: User | null;
-  session: Session | null;
-  isLoading: boolean;
-  signOut: () => Promise<void>;
-  refreshSession: () => Promise<void>;
-  signIn: (email: string, password: string) => Promise<{ shouldRedirectToWelcome: boolean }>;
-  signUp: (email: string, password: string, userData?: any) => Promise<{ error: any; user?: User }>;
-  resetPassword: (email: string) => Promise<{ error: any }>;
-  isNewUser: boolean;
-}
+import { createContext, useContext, ReactNode } from "react";
+import { AuthContextType } from "@/types/auth";
+import { useAuthState } from "@/hooks/useAuthState";
+import { signUpUser, signInUser, resetUserPassword, signOutUser } from "@/services/authService";
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
@@ -30,242 +19,43 @@ const AuthContext = createContext<AuthContextType>({
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isNewUser, setIsNewUser] = useState(false);
+  const {
+    user,
+    session,
+    isLoading,
+    isNewUser,
+    updateIsNewUser,
+    refreshSession,
+    clearAuthState
+  } = useAuthState();
 
-  // Function to sign up with admin privileges to bypass email confirmation
-  const signUp = async (email: string, password: string, userData?: any) => {
-    try {
-      console.log('Attempting to sign up user:', email);
-      
-      // Try to sign up the user - this may fail due to SMTP but user might still be created
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: userData
-        }
-      });
-      
-      console.log('Sign up response:', { data, error });
-      
-      // If there's an SMTP error but user was created, we consider it success
-      if (error) {
-        if (error.message?.includes("Error sending") || 
-            error.message?.includes("SMTP") || 
-            error.message?.includes("Username and Password not accepted")) {
-          console.log('SMTP error during signup, but user may have been created');
-          
-          // Try to sign in immediately to check if user was created
-          try {
-            const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-              email,
-              password,
-            });
-            
-            if (!signInError && signInData.user) {
-              console.log('User was created successfully despite SMTP error');
-              return { error: null, user: signInData.user };
-            }
-          } catch (signInError) {
-            console.log('User not created due to SMTP error');
-          }
-        }
-        
-        // Handle other specific errors
-        if (error.message?.includes("User already registered") || 
-            error.message?.includes("already been registered")) {
-          return { error: { message: "An account with this email already exists. Please sign in instead." } };
-        }
-        
-        return { error };
-      }
-      
-      // If signup was successful
-      if (data.user) {
-        console.log('User created successfully:', data.user.id);
-        return { error: null, user: data.user };
-      }
-      
-      return { error: null };
-    } catch (error: any) {
-      console.error("Error signing up:", error);
-      return { error };
-    }
-  };
-
-  // Function to sign in
   const signIn = async (email: string, password: string) => {
     try {
-      console.log('Attempting to sign in user:', email);
-      
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      
-      if (error) {
-        console.error("Sign in error:", error);
-        throw error;
-      }
-      
-      console.log('Sign in successful:', data);
-      
-      // Check if this is a new user by checking if they have a profile
-      let isFirstTime = false;
-      try {
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('id', data.user.id)
-          .maybeSingle();
-        
-        if (profileError) {
-          console.error('Error checking profile:', profileError);
-        }
-        
-        if (!profile) {
-          isFirstTime = true;
-          console.log('New user detected - no profile found');
-        }
-        
-      } catch (profileError) {
-        console.error('Error checking profile:', profileError);
-        isFirstTime = false;
-      }
-      
-      setIsNewUser(isFirstTime);
-      
-      return { shouldRedirectToWelcome: isFirstTime };
+      const result = await signInUser(email, password);
+      updateIsNewUser(result.shouldRedirectToWelcome);
+      return { shouldRedirectToWelcome: result.shouldRedirectToWelcome };
     } catch (error) {
       console.error("Error signing in:", error);
       throw error;
     }
   };
 
-  // Function to reset password
+  const signUp = async (email: string, password: string, userData?: any) => {
+    return await signUpUser(email, password, userData);
+  };
+
   const resetPassword = async (email: string) => {
-    try {
-      console.log('Attempting password reset for:', email);
-      
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth?mode=reset`,
-      });
-      
-      if (error) {
-        if (error.message?.includes("Error sending") || 
-            error.message?.includes("SMTP") || 
-            error.message?.includes("Username and Password not accepted")) {
-          console.log('Password reset email failed due to SMTP configuration');
-          return { error: { message: "Password reset is currently unavailable due to email configuration issues. Please contact support." } };
-        }
-        
-        console.error("Password reset error:", error);
-        return { error };
-      }
-      
-      console.log('Password reset email sent successfully');
-      return { error: null };
-    } catch (error: any) {
-      console.error("Error resetting password:", error);
-      return { error };
-    }
+    return await resetUserPassword(email);
   };
 
-  // Function to refresh the session
-  const refreshSession = async () => {
-    try {
-      console.log('Refreshing session...');
-      const { data, error } = await supabase.auth.getSession();
-      
-      if (error) {
-        console.error("Session refresh error:", error);
-        setSession(null);
-        setUser(null);
-        return;
-      }
-      
-      console.log('Session refreshed:', data.session ? 'Active' : 'None');
-      setSession(data.session);
-      setUser(data.session?.user || null);
-    } catch (error) {
-      console.error("Error refreshing session:", error);
-      setSession(null);
-      setUser(null);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Function to sign out
   const signOut = async () => {
     try {
-      console.log('Signing out user...');
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        console.error("Sign out error:", error);
-        throw error;
-      }
-      
-      console.log('Sign out successful');
-      setSession(null);
-      setUser(null);
-      setIsNewUser(false);
+      await signOutUser();
+      clearAuthState();
     } catch (error) {
       console.error("Error signing out:", error);
     }
   };
-
-  useEffect(() => {
-    console.log('Setting up auth state listener...');
-    
-    // Set up auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('Auth state change:', event, session?.user?.email || 'No user');
-        
-        setSession(session);
-        setUser(session?.user || null);
-        setIsLoading(false);
-        
-        // Log sign-in event for notifications (defer to avoid blocking)
-        if (event === 'SIGNED_IN' && session?.user) {
-          setTimeout(async () => {
-            try {
-              console.log('Logging sign-in event for notifications...');
-              await supabase.from('security_events').insert({
-                user_id: session.user.id,
-                event_type: 'other',
-                severity: 'low',
-                description: `User signed in from ${navigator.userAgent.includes('Chrome') ? 'Chrome' : 'Browser'} at ${new Date().toLocaleString()}`,
-                resolved: true
-              });
-              
-              console.log('Sign-in event logged successfully');
-            } catch (error) {
-              console.error('Error logging sign-in event:', error);
-            }
-          }, 0);
-        }
-        
-        if (event === 'SIGNED_OUT') {
-          setIsNewUser(false);
-        }
-      }
-    );
-
-    // Get initial session
-    refreshSession();
-
-    // Clean up subscription
-    return () => {
-      console.log('Cleaning up auth subscription...');
-      subscription.unsubscribe();
-    };
-  }, []);
 
   const value = {
     user,
