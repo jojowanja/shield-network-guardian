@@ -15,7 +15,7 @@ export const ProtectedRoute = ({ children }: { children: ReactNode }) => {
     );
   }
 
-  // Redirect to login if not authenticated
+  // Redirect to auth if not authenticated
   if (!user) {
     return <Navigate to="/auth" replace />;
   }

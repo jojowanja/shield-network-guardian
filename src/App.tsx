@@ -5,7 +5,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthGate } from "@/components/AuthGate";
 import Index from "./pages/Index";
+import AuthPage from "./pages/AuthPage";
 import DevicesPage from "./pages/DevicesPage";
 import GuestAccessPage from "./pages/GuestAccessPage";
 import SecurityPage from "./pages/SecurityPage";
@@ -32,26 +35,31 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <SubscriptionProvider>
-          <div className="min-h-screen bg-background">
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/connect" element={<ConnectPage />} />
-              <Route path="/devices" element={<DevicesPage />} />
-              <Route path="/guest-access" element={<GuestAccessPage />} />
-              <Route path="/security" element={<SecurityPage />} />
-              <Route path="/analytics" element={<AnalyticsPage />} />
-              <Route path="/settings" element={<SettingsPage />} />
-              <Route path="/subscription" element={<SubscriptionPage />} />
-              <Route path="/export" element={<ExportPage />} />
-              <Route path="/pulse" element={<PulsePage />} />
-              <Route path="/interactive" element={<InteractivePage />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            <Toaster />
-            <SonnerToaster />
-          </div>
-        </SubscriptionProvider>
+        <AuthProvider>
+          <AuthGate>
+            <SubscriptionProvider>
+              <div className="min-h-screen bg-background">
+                <Routes>
+                  <Route path="/auth" element={<AuthPage />} />
+                  <Route path="/" element={<Index />} />
+                  <Route path="/connect" element={<ConnectPage />} />
+                  <Route path="/devices" element={<DevicesPage />} />
+                  <Route path="/guest-access" element={<GuestAccessPage />} />
+                  <Route path="/security" element={<SecurityPage />} />
+                  <Route path="/analytics" element={<AnalyticsPage />} />
+                  <Route path="/settings" element={<SettingsPage />} />
+                  <Route path="/subscription" element={<SubscriptionPage />} />
+                  <Route path="/export" element={<ExportPage />} />
+                  <Route path="/pulse" element={<PulsePage />} />
+                  <Route path="/interactive" element={<InteractivePage />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+                <Toaster />
+                <SonnerToaster />
+              </div>
+            </SubscriptionProvider>
+          </AuthGate>
+        </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>
   );

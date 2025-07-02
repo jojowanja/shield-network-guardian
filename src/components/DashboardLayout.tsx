@@ -12,6 +12,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { useRealtimeToasts } from "@/hooks/useRealtimeToasts";
 import { useSearch } from "@/hooks/useSearch";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Home,
   Shield,
@@ -24,6 +25,7 @@ import {
   Settings,
   CreditCard,
   Activity,
+  LogOut,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
@@ -35,6 +37,7 @@ interface DashboardLayoutProps {
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
+  const { user, signOut } = useAuth();
   
   const isMobile = useIsMobile();
   const { query, setQuery, results, isOpen, handleSelect, clearSearch } = useSearch();
@@ -71,6 +74,22 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     return `${diffInDays} days ago`;
   };
 
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/auth");
+  };
+
+  const getUserDisplayName = () => {
+    if (!user) return "Guest User";
+    return user.email?.split('@')[0] || "User";
+  };
+
+  const getUserInitials = () => {
+    if (!user) return "GU";
+    const email = user.email || "";
+    return email.substring(0, 2).toUpperCase();
+  };
+
   return (
     <div className="flex flex-col h-screen max-h-screen w-full overflow-hidden bg-gray-50 dark:bg-background">
       <div className="flex flex-1 overflow-hidden w-full">
@@ -102,16 +121,28 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
                   <Avatar className="w-8 h-8">
-                    <AvatarFallback>G</AvatarFallback>
+                    <AvatarFallback>{getUserInitials()}</AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col">
-                    <span className="font-medium text-sm">Guest User</span>
+                    <span className="font-medium text-sm">{getUserDisplayName()}</span>
                     <span className="text-xs text-muted-foreground">
-                      Testing Mode
+                      {user ? "Authenticated" : "Testing Mode"}
                     </span>
                   </div>
                 </div>
-                <ThemeToggle />
+                <div className="flex items-center gap-2">
+                  <ThemeToggle />
+                  {user && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleSignOut}
+                      className="h-8 w-8"
+                    >
+                      <LogOut className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -149,16 +180,28 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <Avatar className="w-8 h-8">
-                      <AvatarFallback>G</AvatarFallback>
+                      <AvatarFallback>{getUserInitials()}</AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col">
-                      <span className="font-medium text-sm">Guest User</span>
+                      <span className="font-medium text-sm">{getUserDisplayName()}</span>
                       <span className="text-xs text-muted-foreground">
-                        Testing Mode
+                        {user ? "Authenticated" : "Testing Mode"}
                       </span>
                     </div>
                   </div>
-                  <ThemeToggle />
+                  <div className="flex items-center gap-2">
+                    <ThemeToggle />
+                    {user && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleSignOut}
+                        className="h-8 w-8"
+                      >
+                        <LogOut className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             </SheetContent>
@@ -295,10 +338,10 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="flex items-center space-x-2 px-2">
                     <div className="w-8 h-8 rounded-full bg-shield flex items-center justify-center text-white">
-                      <span className="font-semibold">GU</span>
+                      <span className="font-semibold">{getUserInitials()}</span>
                     </div>
                     <span className="font-medium text-sm hidden md:inline-block">
-                      Guest User
+                      {getUserDisplayName()}
                     </span>
                   </Button>
                 </DropdownMenuTrigger>
@@ -315,6 +358,15 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                       <span>Export Data</span>
                     </Link>
                   </DropdownMenuItem>
+                  {user && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer flex items-center">
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Sign Out</span>
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>

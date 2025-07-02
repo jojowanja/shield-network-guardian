@@ -1,366 +1,132 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Wifi, WifiOff, Router, Fingerprint, Eye, EyeOff, Zap, RotateCcw } from "lucide-react";
-import { useNetworkStats } from "@/hooks/useNetworkStats";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { RaspberryPiConnect } from "@/components/RaspberryPiConnect";
+import { NetworkStatusChecker } from "@/components/NetworkStatusChecker";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
-import { SpeedTestSummary } from "./SpeedTestSummary";
+import { Wifi, WifiOff, Activity, Zap, CheckCircle, AlertCircle } from "lucide-react";
 
 export const SmartConnect = () => {
-  const [showPassword, setShowPassword] = useState(false);
-  const [guestNetworkEnabled, setGuestNetworkEnabled] = useState(true);
-  const [showGuestPassword, setShowGuestPassword] = useState(false);
-  const [isTestingSpeed, setIsTestingSpeed] = useState(false);
-  const [isRestartingNetwork, setIsRestartingNetwork] = useState(false);
-  const { stats, updateStats } = useNetworkStats();
+  const [isScanning, setIsScanning] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState("idle");
   const { toast } = useToast();
 
-  const mainNetwork = {
-    ssid: "Shield_Home_Network",
-    password: "StrongP@ssw0rd123!",
-    encryption: "WPA3",
-    band: "Dual Band (2.4GHz & 5GHz)",
-    channel: "Auto (Currently: 6, 36)",
-    connectedDevices: 8
-  };
-  
-  const guestNetwork = {
-    ssid: "Shield_Guest",
-    password: "Welcome2Shield!",
-    encryption: "WPA2",
-    validHours: 12,
-    connectedDevices: 2,
-    internetOnly: true
-  };
-
-  const handleSpeedTest = async () => {
-    setIsTestingSpeed(true);
-    await updateStats();
-    setIsTestingSpeed(false);
-    toast({
-      title: "Speed Test Complete",
-      description: `Download: ${stats.downloadSpeed.toFixed(1)} Mbps, Upload: ${stats.uploadSpeed.toFixed(1)} Mbps, Ping: ${stats.ping.toFixed(0)} ms`,
-    });
-  };
-
-  const handleRestartNetwork = async () => {
-    setIsRestartingNetwork(true);
+  const handleQuickScan = async () => {
+    setIsScanning(true);
+    setConnectionStatus("scanning");
+    
+    // Simulate network scanning
+    for (let i = 0; i <= 100; i += 10) {
+      await new Promise(resolve => setTimeout(resolve, 200));
+    }
+    
+    setConnectionStatus("completed");
+    setIsScanning(false);
     
     toast({
-      title: "Network Restart Initiated",
-      description: "Restarting network components...",
+      title: "Network Scan Complete",
+      description: "Found 12 devices on your network",
     });
+  };
 
-    // Simulate network restart process
-    setTimeout(() => {
-      toast({
-        title: "Network Restarted Successfully",
-        description: "All network components have been restarted and are back online",
-      });
-      setIsRestartingNetwork(false);
-      // Trigger a speed test after restart to refresh stats
-      updateStats();
-    }, 5000);
+  const getStatusIcon = () => {
+    switch (connectionStatus) {
+      case "scanning":
+        return <Activity className="animate-spin text-blue-500" size={20} />;
+      case "completed":
+        return <CheckCircle className="text-green-500" size={20} />;
+      default:
+        return <Wifi className="text-gray-500" size={20} />;
+    }
+  };
+
+  const getStatusText = () => {
+    switch (connectionStatus) {
+      case "scanning":
+        return "Scanning network...";
+      case "completed":
+        return "Network scan completed";
+      default:
+        return "Ready to connect";
+    }
   };
 
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="main-network" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
-          <TabsTrigger value="main-network">Main Network</TabsTrigger>
-          <TabsTrigger value="guest-network">Guest Network</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="main-network">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-2xl font-bold flex items-center gap-2">
-                      <Wifi className="text-shield-accent" />
-                      Main Network
-                    </CardTitle>
-                    <CardDescription>Configure your primary WiFi network</CardDescription>
-                  </div>
-                  <div className="network-pulse">
-                    <div className="dot bg-status-safe"></div>
-                    <div className="ring bg-status-safe animate-pulse-ring"></div>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <SpeedTestSummary
-                  download={stats.downloadSpeed}
-                  upload={stats.uploadSpeed}
-                  ping={stats.ping}
-                  lastUpdate={stats.lastUpdate}
-                />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="network-name">Network Name (SSID)</Label>
-                    <Input id="network-name" value={mainNetwork.ssid} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="encryption">Encryption Type</Label>
-                    <Input id="encryption" value={mainNetwork.encryption} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
-                    <div className="relative">
-                      <Input 
-                        id="password" 
-                        type={showPassword ? "text" : "password"} 
-                        value={mainNetwork.password} 
-                      />
-                      <button 
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-                      >
-                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                      </button>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="band">Frequency Band</Label>
-                    <Input id="band" value={mainNetwork.band} />
-                  </div>
-                </div>
-                
-                <div className="border-t pt-4">
-                  <Label className="mb-3 block">Advanced Settings</Label>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">Smart Channel Selection</p>
-                        <p className="text-sm text-muted-foreground">Automatically select the best channel</p>
-                      </div>
-                      <Switch defaultChecked />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">Band Steering</p>
-                        <p className="text-sm text-muted-foreground">Guide devices to best frequency</p>
-                      </div>
-                      <Switch defaultChecked />
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center justify-end gap-3">
-                  <Button variant="outline">Cancel</Button>
-                  <Button className="bg-shield hover:bg-shield-secondary">Save Changes</Button>
-                </div>
-              </CardContent>
-            </Card>
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Smart Connect</h1>
+        <p className="text-muted-foreground">
+          Connect and monitor your network devices in real-time
+        </p>
+      </div>
+
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              {getStatusIcon()}
+              Network Connection Status
+            </CardTitle>
+            <CardDescription>
+              Monitor your network connectivity and perform quick diagnostics
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Status:</span>
+              <Badge variant={connectionStatus === "completed" ? "default" : "secondary"}>
+                {getStatusText()}
+              </Badge>
+            </div>
             
-            <Card>
-              <CardHeader>
-                <CardTitle>Network Status</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Status</span>
-                  <div className="status-indicator text-status-safe">
-                    <span className="dot bg-status-safe"></span>
-                    <span>Online</span>
-                  </div>
+            {isScanning && (
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Scanning Progress</span>
+                  <span>Analyzing network...</span>
                 </div>
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Current Channel</span>
-                  <span>{mainNetwork.channel}</span>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Connected Devices</span>
-                  <span>{mainNetwork.connectedDevices}</span>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Uptime</span>
-                  <span>3d 14h 22m</span>
-                </div>
-                
-                <div className="flex flex-col mt-4 gap-2">
-                  <Button
-                    size="sm"
-                    className="w-full"
-                    onClick={handleSpeedTest}
-                    disabled={isTestingSpeed}
-                  >
-                    {isTestingSpeed ? (
-                      <>
-                        <Loader2 className="animate-spin mr-2 h-4 w-4" />
-                        Testing...
-                      </>
-                    ) : (
-                      <>
-                        <Zap className="mr-2 h-4 w-4" />
-                        Test Speed
-                      </>
-                    )}
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="w-full"
-                    onClick={handleRestartNetwork}
-                    disabled={isRestartingNetwork}
-                  >
-                    {isRestartingNetwork ? (
-                      <>
-                        <Loader2 className="animate-spin mr-2 h-4 w-4" />
-                        Restarting...
-                      </>
-                    ) : (
-                      <>
-                        <RotateCcw className="mr-2 h-4 w-4" />
-                        Restart Network
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="guest-network">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-2xl font-bold flex items-center gap-2">
-                    <Fingerprint className="text-shield-accent" />
-                    Guest Network
-                  </CardTitle>
-                  <CardDescription>Secure access for visitors</CardDescription>
-                </div>
-                <Switch 
-                  checked={guestNetworkEnabled} 
-                  onCheckedChange={setGuestNetworkEnabled} 
-                />
+                <Progress value={85} className="h-2" />
               </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {guestNetworkEnabled ? (
+            )}
+            
+            <div className="grid grid-cols-2 gap-4 pt-4">
+              <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                <div className="text-2xl font-bold text-green-700 dark:text-green-300">12</div>
+                <div className="text-xs text-green-600 dark:text-green-400">Active Devices</div>
+              </div>
+              <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">98%</div>
+                <div className="text-xs text-blue-600 dark:text-blue-400">Network Health</div>
+              </div>
+            </div>
+            
+            <Button 
+              onClick={handleQuickScan} 
+              disabled={isScanning}
+              className="w-full"
+            >
+              {isScanning ? (
                 <>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="guest-network-name">Guest Network Name</Label>
-                      <Input id="guest-network-name" value={guestNetwork.ssid} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="guest-encryption">Encryption Type</Label>
-                      <Input id="guest-encryption" value={guestNetwork.encryption} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="guest-password">Password</Label>
-                      <div className="relative">
-                        <Input 
-                          id="guest-password" 
-                          type={showGuestPassword ? "text" : "password"} 
-                          value={guestNetwork.password} 
-                        />
-                        <button 
-                          onClick={() => setShowGuestPassword(!showGuestPassword)}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-                        >
-                          {showGuestPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                        </button>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="valid-hours">Valid For (Hours)</Label>
-                      <Input id="valid-hours" type="number" value={guestNetwork.validHours} />
-                    </div>
-                  </div>
-                  
-                  <div className="border-t pt-4">
-                    <Label className="mb-3 block">Access Restrictions</Label>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium">Internet Only</p>
-                          <p className="text-sm text-muted-foreground">No access to local devices</p>
-                        </div>
-                        <Switch defaultChecked />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium">Bandwidth Limit</p>
-                          <p className="text-sm text-muted-foreground">Cap guest speed at 25 Mbps</p>
-                        </div>
-                        <Switch defaultChecked />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex flex-col mt-4 gap-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Connected Guests</span>
-                      <span>{guestNetwork.connectedDevices}</span>
-                    </div>
-                    <Button size="sm" variant="outline" className="w-full">Reset Guest Network</Button>
-                  </div>
+                  <Activity className="animate-spin mr-2" size={16} />
+                  Scanning Network...
                 </>
               ) : (
-                <div className="flex flex-col items-center justify-center py-8">
-                  <WifiOff size={48} className="text-muted-foreground mb-4" />
-                  <p className="text-lg font-medium">Guest Network is Disabled</p>
-                  <p className="text-muted-foreground mb-4">Toggle the switch to enable guest access</p>
-                  <div className="flex gap-4">
-                    <Button 
-                      className="bg-shield hover:bg-shield-secondary"
-                      onClick={() => setGuestNetworkEnabled(true)}
-                    >
-                      Enable Guest Network
-                    </Button>
-                  </div>
-                </div>
+                <>
+                  <Zap className="mr-2" size={16} />
+                  Quick Network Scan
+                </>
               )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Connection Details</CardTitle>
-          <CardDescription>Internet service provider information</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="flex items-start space-x-4">
-              <div className="h-10 w-10 rounded-full bg-shield/20 flex items-center justify-center text-shield">
-                <Router size={20} />
-              </div>
-              <div>
-                <p className="font-medium">Internet Provider</p>
-                <p className="text-sm">Spectrum High Speed</p>
-                <p className="text-xs text-muted-foreground">Account: 58372-12</p>
-              </div>
-            </div>
-            
-            <div className="flex items-start space-x-4">
-              <div className="h-10 w-10 rounded-full bg-shield/20 flex items-center justify-center text-shield">
-                <Wifi size={20} />
-              </div>
-              <div>
-                <p className="font-medium">Connection Type</p>
-                <p className="text-sm">Fiber Optic</p>
-                <p className="text-xs text-muted-foreground">Plan: 300 Mbps Down / 25 Mbps Up</p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+            </Button>
+          </CardContent>
+        </Card>
+
+        <RaspberryPiConnect />
+      </div>
+
+      <NetworkStatusChecker />
     </div>
   );
 };

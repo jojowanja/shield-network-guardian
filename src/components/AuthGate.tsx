@@ -21,9 +21,8 @@ export const AuthGate = ({ children }: AuthGateProps) => {
 
     if (!isLoading) {
       const isAuthPage = location.pathname === "/auth";
-      const isWelcomePage = location.pathname === "/welcome";
       
-      if (!user && !isAuthPage && !isWelcomePage) {
+      if (!user && !isAuthPage) {
         // User not authenticated, redirect to auth
         console.log('Redirecting to auth page - user not authenticated');
         navigate("/auth", { replace: true });
