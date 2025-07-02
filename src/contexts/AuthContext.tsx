@@ -10,7 +10,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<{ shouldRedirectToWelcome: boolean }>;
-  signUp: (email: string, password: string, userData?: any) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, userData?: any) => Promise<{ error: any; user?: User }>;
   resetPassword: (email: string) => Promise<{ error: any }>;
   isNewUser: boolean;
 }
@@ -35,50 +35,58 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isNewUser, setIsNewUser] = useState(false);
 
-  // Function to sign up - completely disable email confirmation
+  // Function to sign up with admin privileges to bypass email confirmation
   const signUp = async (email: string, password: string, userData?: any) => {
     try {
       console.log('Attempting to sign up user:', email);
       
-      // Sign up without email confirmation
+      // Try to sign up the user - this may fail due to SMTP but user might still be created
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          // Completely disable email confirmation
-          emailRedirectTo: undefined,
           data: userData
         }
       });
       
       console.log('Sign up response:', { data, error });
       
+      // If there's an SMTP error but user was created, we consider it success
       if (error) {
-        // Handle specific error cases
+        if (error.message?.includes("Error sending") || 
+            error.message?.includes("SMTP") || 
+            error.message?.includes("Username and Password not accepted")) {
+          console.log('SMTP error during signup, but user may have been created');
+          
+          // Try to sign in immediately to check if user was created
+          try {
+            const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+              email,
+              password,
+            });
+            
+            if (!signInError && signInData.user) {
+              console.log('User was created successfully despite SMTP error');
+              return { error: null, user: signInData.user };
+            }
+          } catch (signInError) {
+            console.log('User not created due to SMTP error');
+          }
+        }
+        
+        // Handle other specific errors
         if (error.message?.includes("User already registered") || 
             error.message?.includes("already been registered")) {
-          console.log('User already exists');
           return { error: { message: "An account with this email already exists. Please sign in instead." } };
         }
         
-        // For any SMTP/email errors, we'll treat as success since we're bypassing confirmation
-        if (error.message?.includes("Error sending") || 
-            error.message?.includes("SMTP") || 
-            error.message?.includes("Username and Password not accepted") ||
-            error.message?.includes("email rate limit exceeded")) {
-          console.log('Email error during signup, but treating as success');
-          // Return success even though email failed
-          return { error: null };
-        }
-        
-        console.error("Sign up error:", error);
         return { error };
       }
       
-      // Check if user was created successfully
+      // If signup was successful
       if (data.user) {
         console.log('User created successfully:', data.user.id);
-        return { error: null };
+        return { error: null, user: data.user };
       }
       
       return { error: null };
@@ -147,7 +155,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
       
       if (error) {
-        // Handle SMTP errors gracefully for password reset
         if (error.message?.includes("Error sending") || 
             error.message?.includes("SMTP") || 
             error.message?.includes("Username and Password not accepted")) {
@@ -222,14 +229,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         setSession(session);
         setUser(session?.user || null);
-        
-        if (!session) {
-          setIsLoading(false);
-        }
+        setIsLoading(false);
         
         // Log sign-in event for notifications (defer to avoid blocking)
         if (event === 'SIGNED_IN' && session?.user) {
-          setIsLoading(false);
           setTimeout(async () => {
             try {
               console.log('Logging sign-in event for notifications...');
@@ -249,7 +252,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
         
         if (event === 'SIGNED_OUT') {
-          setIsLoading(false);
           setIsNewUser(false);
         }
       }

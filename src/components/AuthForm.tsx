@@ -87,7 +87,7 @@ export const AuthForm = () => {
 
       // Navigate based on result
       if (result.shouldRedirectToWelcome) {
-        navigate("/welcome");
+        navigate("/");
       } else {
         navigate("/");
       }
@@ -97,7 +97,7 @@ export const AuthForm = () => {
       let errorMessage = "Sign in failed. Please check your email and password.";
       
       if (error.message?.includes("Invalid login credentials")) {
-        errorMessage = "Invalid email or password. Make sure you entered the correct credentials.";
+        errorMessage = "Invalid email or password. If you just registered, please try creating a new account first.";
       } else if (error.message?.includes("Email not confirmed")) {
         errorMessage = "Account not confirmed. Please try creating a new account or contact support.";
       } else if (error.message?.includes("too many requests")) {
@@ -140,22 +140,31 @@ export const AuthForm = () => {
         throw result.error;
       }
       
-      // Registration successful
+      // Registration successful - try to sign in immediately
       setRegistrationSuccess(true);
       toast.success("Account created successfully!", {
-        description: "You can now sign in with your credentials immediately!"
+        description: "You can now sign in with your credentials!"
       });
       
       registerForm.reset();
       
-      // Auto-switch to login tab after successful registration
-      setTimeout(() => {
-        setActiveTab("login");
-        setRegistrationSuccess(false);
-        toast.info("Ready to sign in", {
-          description: "Use your email and password to sign in to your new account."
-        });
-      }, 2000);
+      // Auto-switch to login tab and attempt auto-login
+      setTimeout(async () => {
+        try {
+          const loginResult = await signIn(data.email, data.password);
+          toast.success("Signed in automatically!", {
+            description: "Welcome to Shield Network Guardian!"
+          });
+          navigate("/");
+        } catch (loginError) {
+          console.log('Auto-login failed, switching to login tab');
+          setActiveTab("login");
+          setRegistrationSuccess(false);
+          toast.info("Registration successful!", {
+            description: "Please sign in with your new account."
+          });
+        }
+      }, 1000);
       
     } catch (error: any) {
       console.error('Registration error:', error);
@@ -251,11 +260,11 @@ export const AuthForm = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {/* Success notice for no email confirmation */}
+        {/* Success notice for immediate access */}
         <Alert className="mb-4 bg-green-500/10 border-green-500/20">
           <CheckCircle className="h-4 w-4 text-green-400" />
           <AlertDescription className="text-green-200">
-            No email confirmation required! You can sign in immediately after creating an account.
+            No email confirmation required! Sign in immediately after creating an account.
           </AlertDescription>
         </Alert>
 
@@ -272,7 +281,7 @@ export const AuthForm = () => {
           <Alert className="mb-4 bg-green-500/10 border-green-500/20">
             <CheckCircle className="h-4 w-4 text-green-400" />
             <AlertDescription className="text-green-200">
-              Registration successful! You can now sign in with your credentials.
+              Registration successful! Signing you in automatically...
             </AlertDescription>
           </Alert>
         )}
@@ -350,11 +359,12 @@ export const AuthForm = () => {
             <Alert className="bg-green-500/10 border-green-500/20">
               <CheckCircle className="h-4 w-4 text-green-400" />
               <AlertDescription className="text-green-200">
-                Create your Shield account. Sign in immediately after registration!
+                Create your Shield account and start using it immediately!
               </AlertDescription>
             </Alert>
             
             <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
+              
               <div className="space-y-2">
                 <Label htmlFor="reg-email" className="text-white">Email</Label>
                 <Input
@@ -453,6 +463,7 @@ export const AuthForm = () => {
           </TabsContent>
 
           <TabsContent value="forgot" className="space-y-4 mt-6">
+            
             <Alert className="bg-yellow-500/10 border-yellow-500/20">
               <Info className="h-4 w-4 text-yellow-400" />
               <AlertDescription className="text-yellow-200">
@@ -489,25 +500,3 @@ export const AuthForm = () => {
     </Card>
   );
 };
-
-function getStrengthColor(score: number) {
-  switch(score) {
-    case 0: return "text-red-500";
-    case 1: return "text-orange-500";
-    case 2: return "text-yellow-500";
-    case 3: return "text-green-500";
-    case 4: return "text-green-700";
-    default: return "text-gray-500";
-  }
-}
-
-function getStrengthLabel(score: number) {
-  switch(score) {
-    case 0: return "Very Weak";
-    case 1: return "Weak";
-    case 2: return "Medium";
-    case 3: return "Strong";
-    case 4: return "Very Strong";
-    default: return "";
-  }
-}
