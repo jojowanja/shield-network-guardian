@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -45,7 +46,7 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 
 export const AuthForm = () => {
-  const [activeTab, setActiveTab] = useState("login");
+  const [activeTab, setActiveTab] = useState("register"); // Start with register tab
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -85,21 +86,16 @@ export const AuthForm = () => {
         description: "You have successfully signed in."
       });
 
-      // Navigate based on result
-      if (result.shouldRedirectToWelcome) {
-        navigate("/");
-      } else {
-        navigate("/");
-      }
+      navigate("/");
     } catch (error: any) {
       console.error('Login error:', error);
       
-      let errorMessage = "Sign in failed. Please check your email and password.";
+      let errorMessage = "Invalid email or password. If you haven't registered yet, please create an account first.";
       
       if (error.message?.includes("Invalid login credentials")) {
-        errorMessage = "Invalid email or password. If you just registered, please try creating a new account first.";
+        errorMessage = "Invalid email or password. Please check your credentials or create a new account.";
       } else if (error.message?.includes("Email not confirmed")) {
-        errorMessage = "Account not confirmed. Please try creating a new account or contact support.";
+        errorMessage = "Account not confirmed. Due to email configuration issues, please try creating a new account.";
       } else if (error.message?.includes("too many requests")) {
         errorMessage = "Too many attempts. Please wait a moment before trying again.";
       }
@@ -126,7 +122,6 @@ export const AuthForm = () => {
       console.log('Registration result:', result);
       
       if (result.error) {
-        // Handle specific registration errors
         if (result.error.message?.includes("already exists") || 
             result.error.message?.includes("already been registered")) {
           setAuthError("An account with this email already exists. Please use the Sign In tab instead.");
@@ -140,7 +135,7 @@ export const AuthForm = () => {
         throw result.error;
       }
       
-      // Registration successful - try to sign in immediately
+      // Registration successful
       setRegistrationSuccess(true);
       toast.success("Account created successfully!", {
         description: "You can now sign in with your credentials!"
@@ -148,23 +143,23 @@ export const AuthForm = () => {
       
       registerForm.reset();
       
-      // Auto-switch to login tab and attempt auto-login
+      // Auto-sign in after successful registration
       setTimeout(async () => {
         try {
-          const loginResult = await signIn(data.email, data.password);
+          await signIn(data.email, data.password);
           toast.success("Signed in automatically!", {
             description: "Welcome to Shield Network Guardian!"
           });
-          navigate("/");
+          navigate("/");  
         } catch (loginError) {
-          console.log('Auto-login failed, switching to login tab');
+          console.log('Auto-login failed, user can sign in manually');
           setActiveTab("login");
           setRegistrationSuccess(false);
           toast.info("Registration successful!", {
             description: "Please sign in with your new account."
           });
         }
-      }, 1000);
+      }, 1500);
       
     } catch (error: any) {
       console.error('Registration error:', error);
@@ -203,7 +198,7 @@ export const AuthForm = () => {
       }
       
       toast.success("Reset instructions sent!", {
-        description: "If email service is configured, check your email for password reset instructions."
+        description: "If email service was configured, check your email for password reset instructions."
       });
       
       setActiveTab("login");
@@ -260,11 +255,11 @@ export const AuthForm = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {/* Success notice for immediate access */}
-        <Alert className="mb-4 bg-green-500/10 border-green-500/20">
-          <CheckCircle className="h-4 w-4 text-green-400" />
-          <AlertDescription className="text-green-200">
-            No email confirmation required! Sign in immediately after creating an account.
+        {/* Improved notice for immediate access */}
+        <Alert className="mb-4 bg-blue-500/10 border-blue-500/20">
+          <CheckCircle className="h-4 w-4 text-blue-400" />
+          <AlertDescription className="text-blue-200">
+            <strong>Email issues?</strong> No problem! Create your account and sign in immediately - no email confirmation needed.
           </AlertDescription>
         </Alert>
 
@@ -288,83 +283,26 @@ export const AuthForm = () => {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3 bg-white/10">
-            <TabsTrigger value="login" className="text-white data-[state=active]:bg-white data-[state=active]:text-blue-900">
-              Sign In
-            </TabsTrigger>
             <TabsTrigger value="register" className="text-white data-[state=active]:bg-white data-[state=active]:text-blue-900">
               Register
+            </TabsTrigger>
+            <TabsTrigger value="login" className="text-white data-[state=active]:bg-white data-[state=active]:text-blue-900">
+              Sign In
             </TabsTrigger>
             <TabsTrigger value="forgot" className="text-white data-[state=active]:bg-white data-[state=active]:text-blue-900">
               Reset
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="login" className="space-y-4 mt-6">
-            <Alert className="bg-blue-500/10 border-blue-500/20">
-              <Info className="h-4 w-4 text-blue-400" />
-              <AlertDescription className="text-blue-200">
-                New to Shield? Use the Register tab to create your account first.
-              </AlertDescription>
-            </Alert>
-            
-            <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-white">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="Enter your email"
-                  className="bg-white/10 border-white/20 text-white placeholder:text-blue-200"
-                  {...loginForm.register("email")}
-                />
-                {loginForm.formState.errors.email && (
-                  <p className="text-red-400 text-sm">{loginForm.formState.errors.email.message}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-white">Password</Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password"
-                    className="bg-white/10 border-white/20 text-white placeholder:text-blue-200 pr-10"
-                    {...loginForm.register("password")}
-                  />
-                  <button
-                    type="button"
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-200 hover:text-white"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-                {loginForm.formState.errors.password && (
-                  <p className="text-red-400 text-sm">{loginForm.formState.errors.password.message}</p>
-                )}
-              </div>
-
-              <Button 
-                type="submit" 
-                className="w-full bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500"
-                disabled={isLoading}
-              >
-                {isLoading ? "Signing in..." : "Sign In"}
-              </Button>
-            </form>
-          </TabsContent>
-
           <TabsContent value="register" className="space-y-4 mt-6">
             <Alert className="bg-green-500/10 border-green-500/20">
               <CheckCircle className="h-4 w-4 text-green-400" />
               <AlertDescription className="text-green-200">
-                Create your Shield account and start using it immediately!
+                <strong>Start here!</strong> Create your Shield account and use it immediately - no waiting for emails!
               </AlertDescription>
             </Alert>
             
             <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
-              
               <div className="space-y-2">
                 <Label htmlFor="reg-email" className="text-white">Email</Label>
                 <Input
@@ -385,7 +323,7 @@ export const AuthForm = () => {
                   <Input
                     id="reg-password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Create a password"
+                    placeholder="Create a strong password"
                     className="bg-white/10 border-white/20 text-white placeholder:text-blue-200 pr-10"
                     {...registerForm.register("password", {
                       onChange: (e) => handlePasswordChange(e.target.value)
@@ -457,17 +395,72 @@ export const AuthForm = () => {
                 className="w-full bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500"
                 disabled={isLoading || registrationSuccess}
               >
-                {isLoading ? "Creating account..." : registrationSuccess ? "Account Created!" : "Create Account"}
+                {isLoading ? "Creating account..." : registrationSuccess ? "Account Created!" : "Create Account & Sign In"}
+              </Button>
+            </form>
+          </TabsContent>
+
+          <TabsContent value="login" className="space-y-4 mt-6">
+            <Alert className="bg-blue-500/10 border-blue-500/20">
+              <Info className="h-4 w-4 text-blue-400" />
+              <AlertDescription className="text-blue-200">
+                Already have an account? Sign in here. New to Shield? Use the Register tab first.
+              </AlertDescription>
+            </Alert>
+            
+            <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-white">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  className="bg-white/10 border-white/20 text-white placeholder:text-blue-200"
+                  {...loginForm.register("email")}
+                />
+                {loginForm.formState.errors.email && (
+                  <p className="text-red-400 text-sm">{loginForm.formState.errors.email.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-white">Password</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter your password"
+                    className="bg-white/10 border-white/20 text-white placeholder:text-blue-200 pr-10"
+                    {...loginForm.register("password")}
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-200 hover:text-white"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+                {loginForm.formState.errors.password && (
+                  <p className="text-red-400 text-sm">{loginForm.formState.errors.password.message}</p>
+                )}
+              </div>
+
+              <Button 
+                type="submit" 
+                className="w-full bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500"
+                disabled={isLoading}
+              >
+                {isLoading ? "Signing in..." : "Sign In"}
               </Button>
             </form>
           </TabsContent>
 
           <TabsContent value="forgot" className="space-y-4 mt-6">
-            
             <Alert className="bg-yellow-500/10 border-yellow-500/20">
               <Info className="h-4 w-4 text-yellow-400" />
               <AlertDescription className="text-yellow-200">
-                Password reset may be unavailable due to email configuration issues.
+                Password reset may be unavailable due to email configuration issues. Consider creating a new account instead.
               </AlertDescription>
             </Alert>
             

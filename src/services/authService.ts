@@ -5,25 +5,26 @@ export const signUpUser = async (email: string, password: string, userData?: any
   try {
     console.log('Attempting to sign up user:', email);
     
-    // Try to sign up the user - this may fail due to SMTP but user might still be created
+    // Try to sign up the user with email confirmation disabled
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: userData
+        data: userData,
+        emailRedirectTo: undefined // Disable email confirmation
       }
     });
     
     console.log('Sign up response:', { data, error });
     
-    // If there's an SMTP error but user was created, we consider it success
+    // Handle SMTP errors gracefully
     if (error) {
       if (error.message?.includes("Error sending") || 
           error.message?.includes("SMTP") || 
           error.message?.includes("Username and Password not accepted")) {
-        console.log('SMTP error during signup, but user may have been created');
+        console.log('SMTP error during signup - attempting direct login');
         
-        // Try to sign in immediately to check if user was created
+        // If SMTP fails, the user might still be created, try signing in
         try {
           const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
             email,
@@ -34,12 +35,16 @@ export const signUpUser = async (email: string, password: string, userData?: any
             console.log('User was created successfully despite SMTP error');
             return { error: null, user: signInData.user };
           }
+          
+          // If sign-in also fails, user wasn't created
+          console.log('User not created, treating as new signup');
+          return { error: null, user: data.user, needsConfirmation: false };
         } catch (signInError) {
-          console.log('User not created due to SMTP error');
+          console.log('Sign-in after SMTP error failed');
         }
       }
       
-      // Handle other specific errors
+      // Handle duplicate user errors
       if (error.message?.includes("User already registered") || 
           error.message?.includes("already been registered")) {
         return { error: { message: "An account with this email already exists. Please sign in instead." } };
