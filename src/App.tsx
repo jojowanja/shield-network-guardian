@@ -15,6 +15,8 @@ import SubscriptionPage from "./pages/SubscriptionPage";
 import ExportPage from "./pages/ExportPage";
 import PulsePage from "./pages/PulsePage";
 import InteractivePage from "./pages/InteractivePage";
+import ConnectPage from "./pages/ConnectPage";
+import NotFound from "./pages/NotFound";
 
 // Create QueryClient instance outside of component to avoid recreating
 const queryClient = new QueryClient({
@@ -34,6 +36,7 @@ function App() {
           <div className="min-h-screen bg-background">
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/connect" element={<ConnectPage />} />
               <Route path="/devices" element={<DevicesPage />} />
               <Route path="/guest-access" element={<GuestAccessPage />} />
               <Route path="/security" element={<SecurityPage />} />
@@ -43,6 +46,7 @@ function App() {
               <Route path="/export" element={<ExportPage />} />
               <Route path="/pulse" element={<PulsePage />} />
               <Route path="/interactive" element={<InteractivePage />} />
+              <Route path="*" element={<NotFound />} />
             </Routes>
             <Toaster />
             <SonnerToaster />

@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useAuth } from "@/contexts/AuthContext";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Link, useNavigate } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -35,9 +34,7 @@ interface DashboardLayoutProps {
 
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const [isSigningOut, setIsSigningOut] = useState(false);
   
   const isMobile = useIsMobile();
   const { query, setQuery, results, isOpen, handleSelect, clearSearch } = useSearch();
@@ -45,18 +42,6 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   
   // Initialize real-time toasts
   useRealtimeToasts();
-
-  const handleSignOut = async () => {
-    setIsSigningOut(true);
-    try {
-      await signOut();
-      navigate('/auth');
-    } catch (error) {
-      console.error("Sign out failed:", error);
-    } finally {
-      setIsSigningOut(false);
-    }
-  };
 
   const menuItems = [
     { icon: Home, label: "Overview", path: "/" },
@@ -117,26 +102,17 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
                   <Avatar className="w-8 h-8">
-                    <AvatarImage src={user?.user_metadata?.avatar_url} />
-                    <AvatarFallback>{user?.email?.charAt(0).toUpperCase()}</AvatarFallback>
+                    <AvatarFallback>G</AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col">
-                    <span className="font-medium text-sm">{user?.user_metadata?.full_name || user?.email?.split('@')[0]}</span>
+                    <span className="font-medium text-sm">Guest User</span>
                     <span className="text-xs text-muted-foreground">
-                      {user?.email}
+                      Testing Mode
                     </span>
                   </div>
                 </div>
                 <ThemeToggle />
               </div>
-              <Button
-                variant="outline"
-                className={cn("w-full justify-center", isSigningOut && "opacity-50")}
-                disabled={isSigningOut}
-                onClick={handleSignOut}
-              >
-                {isSigningOut ? "Signing Out..." : "Sign Out"}
-              </Button>
             </div>
           </div>
         )}
@@ -173,26 +149,17 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <Avatar className="w-8 h-8">
-                      <AvatarImage src={user?.user_metadata?.avatar_url} />
-                      <AvatarFallback>{user?.email?.charAt(0).toUpperCase()}</AvatarFallback>
+                      <AvatarFallback>G</AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col">
-                      <span className="font-medium text-sm">{user?.user_metadata?.full_name || user?.email?.split('@')[0]}</span>
+                      <span className="font-medium text-sm">Guest User</span>
                       <span className="text-xs text-muted-foreground">
-                        {user?.email}
+                        Testing Mode
                       </span>
                     </div>
                   </div>
                   <ThemeToggle />
                 </div>
-                <Button
-                  variant="outline"
-                  className={cn("w-full justify-center", isSigningOut && "opacity-50")}
-                  disabled={isSigningOut}
-                  onClick={handleSignOut}
-                >
-                  {isSigningOut ? "Signing Out..." : "Sign Out"}
-                </Button>
               </div>
             </SheetContent>
           </Sheet>
@@ -328,20 +295,14 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="flex items-center space-x-2 px-2">
                     <div className="w-8 h-8 rounded-full bg-shield flex items-center justify-center text-white">
-                      <span className="font-semibold">{user?.email?.substring(0, 2).toUpperCase() || "JD"}</span>
+                      <span className="font-semibold">GU</span>
                     </div>
                     <span className="font-medium text-sm hidden md:inline-block">
-                      {user?.email?.split('@')[0] || "John Doe"}
+                      Guest User
                     </span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuItem asChild>
-                    <Link to="/profile" className="cursor-pointer flex items-center">
-                      <User className="mr-2 h-4 w-4" />
-                      <span>Profile</span>
-                    </Link>
-                  </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/analytics" className="cursor-pointer flex items-center">
                       <ChartBar className="mr-2 h-4 w-4" />
@@ -353,10 +314,6 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                       <FileText className="mr-2 h-4 w-4" />
                       <span>Export Data</span>
                     </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-red-500">
-                    Logout
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
