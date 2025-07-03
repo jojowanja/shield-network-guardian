@@ -9,6 +9,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { AuthGate } from "@/components/AuthGate";
 import Index from "./pages/Index";
 import AuthPage from "./pages/AuthPage";
+import WelcomePage from "./pages/WelcomePage";
 import DevicesPage from "./pages/DevicesPage";
 import GuestAccessPage from "./pages/GuestAccessPage";
 import SecurityPage from "./pages/SecurityPage";
@@ -41,6 +42,7 @@ function App() {
               <div className="min-h-screen bg-background">
                 <Routes>
                   <Route path="/auth" element={<AuthPage />} />
+                  <Route path="/welcome" element={<WelcomePage />} />
                   <Route path="/" element={<Index />} />
                   <Route path="/connect" element={<ConnectPage />} />
                   <Route path="/devices" element={<DevicesPage />} />
