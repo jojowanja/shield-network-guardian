@@ -90,12 +90,21 @@ export const AuthForm = () => {
     } catch (error: any) {
       console.error('Login error:', error);
       
-      let errorMessage = "Invalid email or password.";
+      let errorMessage = "Sign in failed. Please try again.";
       
-      if (error.message?.includes("Invalid login credentials")) {
+      // Handle specific authentication errors
+      if (error.message?.includes("Invalid login credentials") || 
+          error.message?.includes("invalid_credentials")) {
         errorMessage = "Invalid email or password. Please check your credentials.";
-      } else if (error.message?.includes("too many requests")) {
+      } else if (error.message?.includes("Email not confirmed") || 
+                 error.message?.includes("email_not_confirmed")) {
+        errorMessage = "Please create a new account. Sign up is required.";
+        setActiveTab("register");
+      } else if (error.message?.includes("too_many_requests")) {
         errorMessage = "Too many attempts. Please wait a moment before trying again.";
+      } else if (error.message?.includes("User not found")) {
+        errorMessage = "No account found with this email. Please sign up first.";
+        setActiveTab("register");
       }
       
       setAuthError(errorMessage);
@@ -122,7 +131,7 @@ export const AuthForm = () => {
       if (result.error) {
         if (result.error.message?.includes("already exists") || 
             result.error.message?.includes("already been registered")) {
-          setAuthError("An account with this email already exists. Please use the Sign In tab instead.");
+          setAuthError("An account with this email already exists. Please sign in instead.");
           toast.error("Account already exists", {
             description: "Please use the Sign In tab to access your existing account."
           });
@@ -133,10 +142,10 @@ export const AuthForm = () => {
         throw result.error;
       }
       
-      // Registration successful
+      // Registration successful - try to sign in immediately
       setRegistrationSuccess(true);
       toast.success("Account created successfully!", {
-        description: "You can now sign in with your credentials!"
+        description: "Signing you in automatically..."
       });
       
       registerForm.reset();
@@ -145,27 +154,28 @@ export const AuthForm = () => {
       setTimeout(async () => {
         try {
           await signIn(data.email, data.password);
-          toast.success("Signed in automatically!", {
-            description: "Welcome to Shield Network Guardian!"
+          toast.success("Welcome to Shield!", {
+            description: "You're now signed in!"
           });
           navigate("/");  
         } catch (loginError) {
-          console.log('Auto-login failed, user can sign in manually');
+          console.log('Auto-login failed, redirecting to sign in');
           setActiveTab("login");
           setRegistrationSuccess(false);
           toast.info("Registration successful!", {
             description: "Please sign in with your new account."
           });
         }
-      }, 1500);
+      }, 1000);
       
     } catch (error: any) {
       console.error('Registration error:', error);
       
       let errorMessage = "Registration failed. Please try again.";
       
-      if (error.message?.includes("already registered")) {
-        errorMessage = "An account with this email already exists. Please use the Sign In tab instead.";
+      if (error.message?.includes("already registered") || 
+          error.message?.includes("already exists")) {
+        errorMessage = "An account with this email already exists. Please sign in instead.";
         setActiveTab("login");
       } else if (error.message?.includes("weak password")) {
         errorMessage = "Password is too weak. Please choose a stronger password.";

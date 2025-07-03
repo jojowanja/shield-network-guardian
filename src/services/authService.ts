@@ -2,30 +2,26 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export const signUpUser = async (email: string, password: string, userData?: any) => {
-  try {
-    console.log('Attempting to sign up user:', email);
-    
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: userData,
-      }
-    });
-    
-    console.log('Sign up response:', { data, error });
-    
-    if (error) {
-      console.error("Sign up error:", error);
-      return { error };
+  console.log('Attempting to sign up user:', email);
+  
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: userData,
+      emailRedirectTo: undefined, // Disable email confirmation
     }
-    
-    console.log('User created successfully:', data.user?.id);
-    return { error: null, user: data.user };
-  } catch (error: any) {
-    console.error("Error signing up:", error);
+  });
+  
+  console.log('Sign up response:', { data, error });
+  
+  if (error) {
+    console.error("Sign up error:", error);
     return { error };
   }
+  
+  console.log('User created successfully:', data.user?.id);
+  return { error: null, user: data.user };
 };
 
 export const signInUser = async (email: string, password: string) => {
@@ -70,42 +66,32 @@ export const signInUser = async (email: string, password: string) => {
 };
 
 export const resetUserPassword = async (email: string) => {
-  try {
-    console.log('Attempting password reset for:', email);
-    
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth?mode=reset`,
-    });
-    
-    if (error) {
-      console.error("Password reset error:", error);
-      return { error };
-    }
-    
-    console.log('Password reset email sent successfully');
-    return { error: null };
-  } catch (error: any) {
-    console.error("Error resetting password:", error);
+  console.log('Attempting password reset for:', email);
+  
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/auth?mode=reset`,
+  });
+  
+  if (error) {
+    console.error("Password reset error:", error);
     return { error };
   }
+  
+  console.log('Password reset email sent successfully');
+  return { error: null };
 };
 
 export const refreshUserSession = async () => {
-  try {
-    console.log('Refreshing session...');
-    const { data, error } = await supabase.auth.getSession();
-    
-    if (error) {
-      console.error("Session refresh error:", error);
-      return { session: null, user: null };
-    }
-    
-    console.log('Session refreshed:', data.session ? 'Active' : 'None');
-    return { session: data.session, user: data.session?.user || null };
-  } catch (error) {
-    console.error("Error refreshing session:", error);
+  console.log('Refreshing session...');
+  const { data, error } = await supabase.auth.getSession();
+  
+  if (error) {
+    console.error("Session refresh error:", error);
     return { session: null, user: null };
   }
+  
+  console.log('Session refreshed:', data.session ? 'Active' : 'None');
+  return { session: data.session, user: data.session?.user || null };
 };
 
 export const signOutUser = async () => {
