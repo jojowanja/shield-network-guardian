@@ -5,61 +5,23 @@ export const signUpUser = async (email: string, password: string, userData?: any
   try {
     console.log('Attempting to sign up user:', email);
     
-    // Try to sign up the user with email confirmation disabled
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: userData,
-        emailRedirectTo: undefined // Disable email confirmation
       }
     });
     
     console.log('Sign up response:', { data, error });
     
-    // Handle SMTP errors gracefully
     if (error) {
-      if (error.message?.includes("Error sending") || 
-          error.message?.includes("SMTP") || 
-          error.message?.includes("Username and Password not accepted")) {
-        console.log('SMTP error during signup - attempting direct login');
-        
-        // If SMTP fails, the user might still be created, try signing in
-        try {
-          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-          });
-          
-          if (!signInError && signInData.user) {
-            console.log('User was created successfully despite SMTP error');
-            return { error: null, user: signInData.user };
-          }
-          
-          // If sign-in also fails, user wasn't created
-          console.log('User not created, treating as new signup');
-          return { error: null, user: data.user, needsConfirmation: false };
-        } catch (signInError) {
-          console.log('Sign-in after SMTP error failed');
-        }
-      }
-      
-      // Handle duplicate user errors
-      if (error.message?.includes("User already registered") || 
-          error.message?.includes("already been registered")) {
-        return { error: { message: "An account with this email already exists. Please sign in instead." } };
-      }
-      
+      console.error("Sign up error:", error);
       return { error };
     }
     
-    // If signup was successful
-    if (data.user) {
-      console.log('User created successfully:', data.user.id);
-      return { error: null, user: data.user };
-    }
-    
-    return { error: null };
+    console.log('User created successfully:', data.user?.id);
+    return { error: null, user: data.user };
   } catch (error: any) {
     console.error("Error signing up:", error);
     return { error };
@@ -116,13 +78,6 @@ export const resetUserPassword = async (email: string) => {
     });
     
     if (error) {
-      if (error.message?.includes("Error sending") || 
-          error.message?.includes("SMTP") || 
-          error.message?.includes("Username and Password not accepted")) {
-        console.log('Password reset email failed due to SMTP configuration');
-        return { error: { message: "Password reset is currently unavailable due to email configuration issues. Please contact support." } };
-      }
-      
       console.error("Password reset error:", error);
       return { error };
     }

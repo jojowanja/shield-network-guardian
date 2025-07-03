@@ -12,7 +12,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Eye, EyeOff, AlertCircle, CheckCircle, Info } from "lucide-react";
+import { Eye, EyeOff, AlertCircle, CheckCircle } from "lucide-react";
 import { checkPasswordStrength } from "@/utils/passwordUtils";
 
 // Enhanced password validation schema
@@ -46,7 +46,7 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 
 export const AuthForm = () => {
-  const [activeTab, setActiveTab] = useState("register"); // Start with register tab
+  const [activeTab, setActiveTab] = useState("register");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -90,12 +90,10 @@ export const AuthForm = () => {
     } catch (error: any) {
       console.error('Login error:', error);
       
-      let errorMessage = "Invalid email or password. If you haven't registered yet, please create an account first.";
+      let errorMessage = "Invalid email or password.";
       
       if (error.message?.includes("Invalid login credentials")) {
-        errorMessage = "Invalid email or password. Please check your credentials or create a new account.";
-      } else if (error.message?.includes("Email not confirmed")) {
-        errorMessage = "Account not confirmed. Due to email configuration issues, please try creating a new account.";
+        errorMessage = "Invalid email or password. Please check your credentials.";
       } else if (error.message?.includes("too many requests")) {
         errorMessage = "Too many attempts. Please wait a moment before trying again.";
       }
@@ -198,7 +196,7 @@ export const AuthForm = () => {
       }
       
       toast.success("Reset instructions sent!", {
-        description: "If email service was configured, check your email for password reset instructions."
+        description: "Check your email for password reset instructions."
       });
       
       setActiveTab("login");
@@ -255,14 +253,6 @@ export const AuthForm = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {/* Improved notice for immediate access */}
-        <Alert className="mb-4 bg-blue-500/10 border-blue-500/20">
-          <CheckCircle className="h-4 w-4 text-blue-400" />
-          <AlertDescription className="text-blue-200">
-            <strong>Email issues?</strong> No problem! Create your account and sign in immediately - no email confirmation needed.
-          </AlertDescription>
-        </Alert>
-
         {authError && (
           <Alert className="mb-4 bg-red-500/10 border-red-500/20">
             <AlertCircle className="h-4 w-4 text-red-400" />
@@ -295,13 +285,6 @@ export const AuthForm = () => {
           </TabsList>
 
           <TabsContent value="register" className="space-y-4 mt-6">
-            <Alert className="bg-green-500/10 border-green-500/20">
-              <CheckCircle className="h-4 w-4 text-green-400" />
-              <AlertDescription className="text-green-200">
-                <strong>Start here!</strong> Create your Shield account and use it immediately - no waiting for emails!
-              </AlertDescription>
-            </Alert>
-            
             <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="reg-email" className="text-white">Email</Label>
@@ -395,19 +378,12 @@ export const AuthForm = () => {
                 className="w-full bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500"
                 disabled={isLoading || registrationSuccess}
               >
-                {isLoading ? "Creating account..." : registrationSuccess ? "Account Created!" : "Create Account & Sign In"}
+                {isLoading ? "Creating account..." : registrationSuccess ? "Account Created!" : "Create Account"}
               </Button>
             </form>
           </TabsContent>
 
           <TabsContent value="login" className="space-y-4 mt-6">
-            <Alert className="bg-blue-500/10 border-blue-500/20">
-              <Info className="h-4 w-4 text-blue-400" />
-              <AlertDescription className="text-blue-200">
-                Already have an account? Sign in here. New to Shield? Use the Register tab first.
-              </AlertDescription>
-            </Alert>
-            
             <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-white">Email</Label>
@@ -457,13 +433,6 @@ export const AuthForm = () => {
           </TabsContent>
 
           <TabsContent value="forgot" className="space-y-4 mt-6">
-            <Alert className="bg-yellow-500/10 border-yellow-500/20">
-              <Info className="h-4 w-4 text-yellow-400" />
-              <AlertDescription className="text-yellow-200">
-                Password reset may be unavailable due to email configuration issues. Consider creating a new account instead.
-              </AlertDescription>
-            </Alert>
-            
             <form onSubmit={forgotPasswordForm.handleSubmit(handleForgotPassword)} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="forgot-email" className="text-white">Email</Label>
