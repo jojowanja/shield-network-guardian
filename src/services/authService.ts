@@ -32,8 +32,30 @@ export const signInUser = async (email: string, password: string) => {
     password,
   });
   
+  console.log('Sign in response:', { data, error });
+  
   if (error) {
     console.error("Sign in error:", error);
+    
+    // Handle specific error cases
+    if (error.message?.includes("Email not confirmed")) {
+      console.log('Email confirmation required - attempting to resend confirmation');
+      
+      // Try to resend confirmation email
+      const { error: resendError } = await supabase.auth.resend({
+        type: 'signup',
+        email: email
+      });
+      
+      if (resendError) {
+        console.error('Failed to resend confirmation:', resendError);
+      } else {
+        console.log('Confirmation email resent successfully');
+      }
+      
+      throw new Error("Please check your email and click the confirmation link to activate your account. We've sent a new confirmation email.");
+    }
+    
     throw error;
   }
   

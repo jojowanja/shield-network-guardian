@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,7 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Eye, EyeOff, AlertCircle, CheckCircle } from "lucide-react";
+import { Eye, EyeOff, AlertCircle, CheckCircle, Mail } from "lucide-react";
 import { checkPasswordStrength } from "@/utils/passwordUtils";
 
 // Enhanced password validation schema
@@ -52,6 +51,8 @@ export const AuthForm = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState<any>(null);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState<string>("");
   const { signIn, signUp, resetPassword } = useAuth();
   const navigate = useNavigate();
 
@@ -89,7 +90,11 @@ export const AuthForm = () => {
       
       let errorMessage = "Sign in failed. Please check your credentials.";
       
-      if (error.message?.includes("Invalid login credentials")) {
+      if (error.message?.includes("Please check your email")) {
+        errorMessage = error.message;
+        setShowEmailConfirmation(true);
+        setRegisteredEmail(data.email);
+      } else if (error.message?.includes("Invalid login credentials")) {
         errorMessage = "Invalid email or password. Please check your credentials and try again.";
       } else if (error.message?.includes("User not found")) {
         errorMessage = "No account found with this email. Please sign up first.";
@@ -128,11 +133,12 @@ export const AuthForm = () => {
       }
       
       toast.success("Account created successfully!", {
-        description: "You can now sign in with your new account."
+        description: "Please check your email to confirm your account before signing in."
       });
       
+      setRegisteredEmail(data.email);
+      setShowEmailConfirmation(true);
       registerForm.reset();
-      setActiveTab("login");
       
     } catch (error: any) {
       console.error('Registration error:', error);
@@ -214,6 +220,43 @@ export const AuthForm = () => {
       default: return "";
     }
   };
+
+  if (showEmailConfirmation) {
+    return (
+      <Card className="w-full max-w-md mx-auto bg-white/10 backdrop-blur-md border-white/20">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl text-white">Check Your Email</CardTitle>
+          <CardDescription className="text-blue-200">
+            We've sent a confirmation link to your email
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="text-center">
+          <div className="mb-6">
+            <Mail className="mx-auto h-16 w-16 text-blue-300 mb-4" />
+            <p className="text-white mb-2">
+              We've sent a confirmation email to:
+            </p>
+            <p className="text-blue-200 font-medium mb-4">
+              {registeredEmail}
+            </p>
+            <p className="text-sm text-blue-200">
+              Click the link in the email to activate your account, then return here to sign in.
+            </p>
+          </div>
+          
+          <Button 
+            onClick={() => {
+              setShowEmailConfirmation(false);
+              setActiveTab("login");
+            }}
+            className="w-full bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500"
+          >
+            Back to Sign In
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="w-full max-w-md mx-auto bg-white/10 backdrop-blur-md border-white/20">
