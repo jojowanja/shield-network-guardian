@@ -9,7 +9,7 @@ export const signUpUser = async (email: string, password: string, userData?: any
     password,
     options: {
       data: userData,
-      emailRedirectTo: undefined, // Disable email confirmation
+      emailRedirectTo: undefined,
     }
   });
   
@@ -38,31 +38,7 @@ export const signInUser = async (email: string, password: string) => {
   }
   
   console.log('Sign in successful:', data);
-  
-  // Check if this is a new user by checking if they have a profile
-  let isFirstTime = false;
-  try {
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('id', data.user.id)
-      .maybeSingle();
-    
-    if (profileError) {
-      console.error('Error checking profile:', profileError);
-    }
-    
-    if (!profile) {
-      isFirstTime = true;
-      console.log('New user detected - no profile found');
-    }
-    
-  } catch (profileError) {
-    console.error('Error checking profile:', profileError);
-    isFirstTime = false;
-  }
-  
-  return { shouldRedirectToWelcome: isFirstTime, user: data.user };
+  return { shouldRedirectToWelcome: false, user: data.user };
 };
 
 export const resetUserPassword = async (email: string) => {

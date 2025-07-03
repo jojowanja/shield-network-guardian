@@ -52,7 +52,6 @@ export const AuthForm = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState<any>(null);
   const [authError, setAuthError] = useState<string | null>(null);
-  const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const { signIn, signUp, resetPassword } = useAuth();
   const navigate = useNavigate();
 
@@ -78,9 +77,7 @@ export const AuthForm = () => {
     try {
       console.log('Attempting login for:', data.email);
       
-      const result = await signIn(data.email, data.password);
-      
-      console.log('Login result:', result);
+      await signIn(data.email, data.password);
       
       toast.success("Welcome back!", {
         description: "You have successfully signed in."
@@ -90,18 +87,10 @@ export const AuthForm = () => {
     } catch (error: any) {
       console.error('Login error:', error);
       
-      let errorMessage = "Sign in failed. Please try again.";
+      let errorMessage = "Sign in failed. Please check your credentials.";
       
-      // Handle specific authentication errors
-      if (error.message?.includes("Invalid login credentials") || 
-          error.message?.includes("invalid_credentials")) {
-        errorMessage = "Invalid email or password. Please check your credentials.";
-      } else if (error.message?.includes("Email not confirmed") || 
-                 error.message?.includes("email_not_confirmed")) {
-        errorMessage = "Please create a new account. Sign up is required.";
-        setActiveTab("register");
-      } else if (error.message?.includes("too_many_requests")) {
-        errorMessage = "Too many attempts. Please wait a moment before trying again.";
+      if (error.message?.includes("Invalid login credentials")) {
+        errorMessage = "Invalid email or password. Please check your credentials and try again.";
       } else if (error.message?.includes("User not found")) {
         errorMessage = "No account found with this email. Please sign up first.";
         setActiveTab("register");
@@ -119,18 +108,14 @@ export const AuthForm = () => {
   const handleRegister = async (data: RegisterFormValues) => {
     setIsLoading(true);
     setAuthError(null);
-    setRegistrationSuccess(false);
     
     try {
       console.log('Attempting registration for:', data.email);
       
       const result = await signUp(data.email, data.password);
       
-      console.log('Registration result:', result);
-      
       if (result.error) {
-        if (result.error.message?.includes("already exists") || 
-            result.error.message?.includes("already been registered")) {
+        if (result.error.message?.includes("User already registered")) {
           setAuthError("An account with this email already exists. Please sign in instead.");
           toast.error("Account already exists", {
             description: "Please use the Sign In tab to access your existing account."
@@ -142,45 +127,21 @@ export const AuthForm = () => {
         throw result.error;
       }
       
-      // Registration successful - try to sign in immediately
-      setRegistrationSuccess(true);
       toast.success("Account created successfully!", {
-        description: "Signing you in automatically..."
+        description: "You can now sign in with your new account."
       });
       
       registerForm.reset();
-      
-      // Auto-sign in after successful registration
-      setTimeout(async () => {
-        try {
-          await signIn(data.email, data.password);
-          toast.success("Welcome to Shield!", {
-            description: "You're now signed in!"
-          });
-          navigate("/");  
-        } catch (loginError) {
-          console.log('Auto-login failed, redirecting to sign in');
-          setActiveTab("login");
-          setRegistrationSuccess(false);
-          toast.info("Registration successful!", {
-            description: "Please sign in with your new account."
-          });
-        }
-      }, 1000);
+      setActiveTab("login");
       
     } catch (error: any) {
       console.error('Registration error:', error);
       
       let errorMessage = "Registration failed. Please try again.";
       
-      if (error.message?.includes("already registered") || 
-          error.message?.includes("already exists")) {
+      if (error.message?.includes("User already registered")) {
         errorMessage = "An account with this email already exists. Please sign in instead.";
         setActiveTab("login");
-      } else if (error.message?.includes("weak password")) {
-        errorMessage = "Password is too weak. Please choose a stronger password.";
-      } else if (error.message?.includes("invalid email")) {
-        errorMessage = "Please enter a valid email address.";
       }
       
       setAuthError(errorMessage);
@@ -268,15 +229,6 @@ export const AuthForm = () => {
             <AlertCircle className="h-4 w-4 text-red-400" />
             <AlertDescription className="text-red-200">
               {authError}
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {registrationSuccess && (
-          <Alert className="mb-4 bg-green-500/10 border-green-500/20">
-            <CheckCircle className="h-4 w-4 text-green-400" />
-            <AlertDescription className="text-green-200">
-              Registration successful! Signing you in automatically...
             </AlertDescription>
           </Alert>
         )}
@@ -386,9 +338,9 @@ export const AuthForm = () => {
               <Button 
                 type="submit" 
                 className="w-full bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500"
-                disabled={isLoading || registrationSuccess}
+                disabled={isLoading}
               >
-                {isLoading ? "Creating account..." : registrationSuccess ? "Account Created!" : "Create Account"}
+                {isLoading ? "Creating account..." : "Create Account"}
               </Button>
             </form>
           </TabsContent>
