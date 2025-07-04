@@ -17,6 +17,7 @@ import ExportPage from "./pages/ExportPage";
 import PulsePage from "./pages/PulsePage";
 import InteractivePage from "./pages/InteractivePage";
 import ConnectPage from "./pages/ConnectPage";
+import OverviewPage from "./pages/OverviewPage";
 import NotFound from "./pages/NotFound";
 
 // Create QueryClient instance outside of component to avoid recreating
@@ -38,6 +39,7 @@ function App() {
             <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/dashboard" element={<Index />} />
+              <Route path="/overview" element={<OverviewPage />} />
               <Route path="/connect" element={<ConnectPage />} />
               <Route path="/devices" element={<DevicesPage />} />
               <Route path="/guest-access" element={<GuestAccessPage />} />
