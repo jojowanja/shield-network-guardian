@@ -14,6 +14,7 @@ import AnalyticsPage from "./pages/AnalyticsPage";
 import SettingsPage from "./pages/SettingsPage";
 import SubscriptionPage from "./pages/SubscriptionPage";
 import ExportPage from "./pages/ExportPage";
+import ProfilePage from "./pages/ProfilePage";
 import PulsePage from "./pages/PulsePage";
 import InteractivePage from "./pages/InteractivePage";
 import ConnectPage from "./pages/ConnectPage";
@@ -48,6 +49,7 @@ function App() {
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/subscription" element={<SubscriptionPage />} />
               <Route path="/export" element={<ExportPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
               <Route path="/pulse" element={<PulsePage />} />
               <Route path="/interactive" element={<InteractivePage />} />
               <Route path="*" element={<NotFound />} />
