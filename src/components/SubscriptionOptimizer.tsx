@@ -145,9 +145,8 @@ export const SubscriptionOptimizer = () => {
 
   return (
     <PremiumGate 
-      feature="Bandwidth Optimization" 
+      feature="optimization-tips" 
       description="Optimize your internet plan based on usage patterns with Premium subscription."
-      requiredTier="premium"
     >
       {optimizerContent}
     </PremiumGate>

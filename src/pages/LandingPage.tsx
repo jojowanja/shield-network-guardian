@@ -1,12 +1,39 @@
-
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Shield, Wifi, Lock, BarChart3, CheckCircle, Activity, Database, Eye } from "lucide-react";
+import { 
+  Shield, 
+  Wifi, 
+  Lock, 
+  BarChart3, 
+  CheckCircle, 
+  Activity, 
+  Database, 
+  Eye,
+  Home,
+  GraduationCap,
+  Building2,
+  Crown,
+  Star,
+  Users,
+  Router,
+  AlertTriangle,
+  TrendingUp,
+  BrainCircuit,
+  UserCheck,
+  Zap,
+  FileText,
+  Palette
+} from "lucide-react";
+
+type PlanType = 'home' | 'school' | 'work';
 
 const LandingPage = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<PlanType | null>(null);
 
   const loadingSteps = [
     { icon: Database, text: "Loading Network Resources...", delay: 500 },
@@ -19,7 +46,7 @@ const LandingPage = () => {
 
   const [currentStep, setCurrentStep] = useState(-1);
 
-  const handleGetStarted = () => {
+  const handleGetStarted = (planType?: PlanType) => {
     setIsLoading(true);
     setCurrentStep(0);
     
@@ -28,11 +55,94 @@ const LandingPage = () => {
         setCurrentStep(index);
         if (index === loadingSteps.length - 1) {
           setTimeout(() => {
-            navigate("/dashboard");
+            navigate("/dashboard", { state: { selectedPlan: planType || 'home' } });
           }, 1000);
         }
       }, step.delay);
     });
+  };
+
+  const plans = {
+    home: {
+      icon: Home,
+      title: "🏠 Home",
+      subtitle: "Smart WiFi Guardian for Families",
+      description: "Perfect for home networks with multiple devices and family members.",
+      features: {
+        basic: [
+          "Show all connected devices (IP/MAC)",
+          "Device count vs plan limits",
+          "Network overload alerts", 
+          "Speed monitoring with trends",
+          "Light blue theme"
+        ],
+        premium: [
+          "Smart restart suggestions",
+          "ISP-based optimization tips", 
+          "Guest WiFi with auto-expiry",
+          "Auto-disconnect inactive devices",
+          "AI router upgrade advice",
+          "Weekly performance reports",
+          "Premium gradient theme + dark mode"
+        ]
+      },
+      pricing: {
+        basic: "Free",
+        premium: "KES 300/month"
+      }
+    },
+    school: {
+      icon: GraduationCap,
+      title: "🎓 School",
+      subtitle: "Network Management for Education",
+      description: "Designed for schools, libraries, and educational institutions.",
+      features: {
+        basic: [
+          "Student device monitoring",
+          "Bandwidth allocation tracking",
+          "Basic content filtering alerts",
+          "Network performance reports"
+        ],
+        premium: [
+          "Advanced content filtering",
+          "Classroom network segmentation", 
+          "Student usage analytics",
+          "Automated access controls",
+          "Educational resource optimization",
+          "Multi-campus support"
+        ]
+      },
+      pricing: {
+        basic: "Free",
+        premium: "KES 1,500/month"
+      }
+    },
+    work: {
+      icon: Building2,
+      title: "💼 Work",
+      subtitle: "Enterprise Network Security",
+      description: "Built for businesses, offices, and professional environments.",
+      features: {
+        basic: [
+          "Employee device tracking",
+          "Basic security monitoring",
+          "Bandwidth usage reports",
+          "Network uptime tracking"
+        ],
+        premium: [
+          "Advanced threat detection",
+          "VPN integration support",
+          "Employee productivity insights",
+          "Multi-location management",
+          "Compliance reporting",
+          "24/7 enterprise support"
+        ]
+      },
+      pricing: {
+        basic: "Free",
+        premium: "KES 3,000/month"
+      }
+    }
   };
 
   if (isLoading) {
@@ -94,6 +204,164 @@ const LandingPage = () => {
     );
   }
 
+  if (selectedPlan) {
+    const plan = plans[selectedPlan];
+    const PlanIcon = plan.icon;
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 py-12 px-4">
+        <div className="max-w-6xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-12">
+            <Button 
+              variant="ghost" 
+              onClick={() => setSelectedPlan(null)}
+              className="text-white hover:bg-white/10 mb-6"
+            >
+              ← Back to Plans
+            </Button>
+            
+            <div className="flex items-center justify-center mb-6">
+              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-2xl flex items-center justify-center mr-4">
+                <PlanIcon size={32} className="text-white" />
+              </div>
+              <div className="text-left">
+                <h1 className="text-4xl font-bold text-white">{plan.title}</h1>
+                <p className="text-xl text-blue-200">{plan.subtitle}</p>
+              </div>
+            </div>
+            
+            <p className="text-lg text-blue-200 max-w-2xl mx-auto">{plan.description}</p>
+          </div>
+
+          {/* Pricing Comparison */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+            {/* Basic Plan */}
+            <Card className="bg-white/10 backdrop-blur-md border-white/20 text-white">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-2xl">Basic Plan</CardTitle>
+                  <Badge variant="secondary" className="bg-blue-500/20 text-blue-200">
+                    {plan.pricing.basic}
+                  </Badge>
+                </div>
+                <CardDescription className="text-blue-200">
+                  Essential network monitoring features
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-3">
+                  {plan.features.basic.map((feature, index) => (
+                    <li key={index} className="flex items-start">
+                      <CheckCircle size={16} className="text-green-400 mt-1 mr-3 flex-shrink-0" />
+                      <span className="text-sm">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Button 
+                  onClick={() => handleGetStarted(selectedPlan)}
+                  className="w-full mt-6 bg-blue-500 hover:bg-blue-600"
+                >
+                  Start Free
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Premium Plan */}
+            <Card className="bg-gradient-to-br from-amber-500/20 to-orange-500/20 backdrop-blur-md border-amber-400/30 text-white relative overflow-hidden">
+              <div className="absolute top-4 right-4">
+                <Crown className="text-amber-400" size={24} />
+              </div>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-2xl">Premium Plan</CardTitle>
+                  <Badge className="bg-gradient-to-r from-amber-500 to-orange-500">
+                    {plan.pricing.premium}
+                  </Badge>
+                </div>
+                <CardDescription className="text-amber-100">
+                  Advanced features with AI-powered insights
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="mb-4">
+                  <p className="text-sm text-amber-200 mb-2">Everything in Basic, plus:</p>
+                </div>
+                <ul className="space-y-3">
+                  {plan.features.premium.map((feature, index) => (
+                    <li key={index} className="flex items-start">
+                      <Star size={16} className="text-amber-400 mt-1 mr-3 flex-shrink-0" />
+                      <span className="text-sm">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Button 
+                  onClick={() => handleGetStarted(selectedPlan)}
+                  className="w-full mt-6 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
+                >
+                  <Crown className="mr-2" size={16} />
+                  Start Premium Trial
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Feature Breakdown */}
+          <Card className="bg-white/5 backdrop-blur-md border-white/10">
+            <CardHeader>
+              <CardTitle className="text-white text-center">Detailed Feature Comparison</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full text-white">
+                  <thead>
+                    <tr className="border-b border-white/20">
+                      <th className="text-left py-3 px-4">Feature</th>
+                      <th className="text-center py-3 px-4">Basic</th>
+                      <th className="text-center py-3 px-4">Premium</th>
+                    </tr>
+                  </thead>
+                  <tbody className="space-y-2">
+                    <tr className="border-b border-white/10">
+                      <td className="py-3 px-4">Device List</td>
+                      <td className="text-center py-3 px-4"><CheckCircle className="text-green-400 mx-auto" size={16} /></td>
+                      <td className="text-center py-3 px-4"><CheckCircle className="text-green-400 mx-auto" size={16} /></td>
+                    </tr>
+                    <tr className="border-b border-white/10">
+                      <td className="py-3 px-4">Speed Test</td>
+                      <td className="text-center py-3 px-4"><CheckCircle className="text-green-400 mx-auto" size={16} /></td>
+                      <td className="text-center py-3 px-4"><CheckCircle className="text-green-400 mx-auto" size={16} /></td>
+                    </tr>
+                    <tr className="border-b border-white/10">
+                      <td className="py-3 px-4">Smart Alerts</td>
+                      <td className="text-center py-3 px-4">❌</td>
+                      <td className="text-center py-3 px-4"><CheckCircle className="text-green-400 mx-auto" size={16} /></td>
+                    </tr>
+                    <tr className="border-b border-white/10">
+                      <td className="py-3 px-4">Guest WiFi Access</td>
+                      <td className="text-center py-3 px-4">❌</td>
+                      <td className="text-center py-3 px-4"><CheckCircle className="text-green-400 mx-auto" size={16} /></td>
+                    </tr>
+                    <tr className="border-b border-white/10">
+                      <td className="py-3 px-4">AI Recommendations</td>
+                      <td className="text-center py-3 px-4">❌</td>
+                      <td className="text-center py-3 px-4"><CheckCircle className="text-green-400 mx-auto" size={16} /></td>
+                    </tr>
+                    <tr className="border-b border-white/10">
+                      <td className="py-3 px-4">Premium Theme</td>
+                      <td className="text-center py-3 px-4">❌</td>
+                      <td className="text-center py-3 px-4"><CheckCircle className="text-green-400 mx-auto" size={16} /></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 flex items-center justify-center relative overflow-hidden">
       {/* Background Animation */}
@@ -103,51 +371,82 @@ const LandingPage = () => {
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl animate-pulse delay-500"></div>
       </div>
 
-      <div className="relative z-10 text-center max-w-4xl mx-auto px-6">
-        {/* Logo */}
+      <div className="relative z-10 text-center max-w-6xl mx-auto px-6 py-12">
+        {/* Logo and Header */}
         <div className="mx-auto w-24 h-24 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-3xl flex items-center justify-center mb-8 shadow-2xl animate-float">
           <Shield size={48} className="text-white" />
         </div>
 
-        {/* Main Heading */}
-        <h1 className="text-6xl font-bold text-white mb-6 animate-fade-in">
+        <h1 className="text-6xl font-bold text-white mb-4 animate-fade-in">
           Shield Network Guardian
         </h1>
         
-        <p className="text-xl text-blue-200 mb-12 max-w-2xl mx-auto animate-fade-in delay-200">
-          Advanced network monitoring and security solution for your home and business. 
-          Monitor devices, analyze traffic, and protect your network in real-time.
+        <p className="text-2xl text-blue-200 mb-4 animate-fade-in delay-200">
+          Your Smart WiFi Guardian for Home, School & Work
         </p>
 
-        {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 animate-fade-in delay-300 hover:scale-105 transition-transform duration-300">
-            <Wifi className="w-12 h-12 text-cyan-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-white mb-2">Network Monitoring</h3>
-            <p className="text-blue-200 text-sm">Real-time device tracking and bandwidth analysis</p>
-          </div>
-          
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 animate-fade-in delay-500 hover:scale-105 transition-transform duration-300">
-            <Lock className="w-12 h-12 text-cyan-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-white mb-2">Security Protection</h3>
-            <p className="text-blue-200 text-sm">Advanced threat detection and network security</p>
-          </div>
-          
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 animate-fade-in delay-700 hover:scale-105 transition-transform duration-300">
-            <BarChart3 className="w-12 h-12 text-cyan-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-white mb-2">Analytics & Insights</h3>
-            <p className="text-blue-200 text-sm">Detailed reports and performance analytics</p>
+        <div className="w-full max-w-4xl mx-auto border-t border-b border-white/20 py-8 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {(Object.keys(plans) as PlanType[]).map((planKey) => {
+              const plan = plans[planKey];
+              const PlanIcon = plan.icon;
+              
+              return (
+                <Card 
+                  key={planKey}
+                  className="bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/15 transition-all duration-300 cursor-pointer group hover:scale-105"
+                  onClick={() => setSelectedPlan(planKey)}
+                >
+                  <CardHeader className="text-center">
+                    <div className="mx-auto w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                      <PlanIcon size={32} className="text-white" />
+                    </div>
+                    <CardTitle className="text-white text-xl">{plan.title}</CardTitle>
+                    <CardDescription className="text-blue-200">
+                      {plan.subtitle}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="text-center">
+                    <p className="text-sm text-blue-200 mb-4">{plan.description}</p>
+                    <Button 
+                      variant="outline" 
+                      className="w-full border-white/30 text-white hover:bg-white/10"
+                    >
+                      Learn More
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </div>
 
-        {/* Get Started Button */}
-        <Button 
-          onClick={handleGetStarted}
-          size="lg"
-          className="bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white px-12 py-4 text-lg font-semibold rounded-xl shadow-2xl animate-fade-in delay-1000 hover:scale-105 transition-all duration-300"
-        >
-          Get Started
-        </Button>
+        {/* Quick Start Option */}
+        <div className="bg-white/5 backdrop-blur-md border border-white/20 rounded-2xl p-8 mb-8">
+          <h3 className="text-2xl font-bold text-white mb-4">Not sure which plan? Start with Home</h3>
+          <p className="text-blue-200 mb-6">
+            Jump right into our most popular plan and explore all the features
+          </p>
+          <Button 
+            onClick={() => handleGetStarted('home')}
+            size="lg"
+            className="bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white px-12 py-4 text-lg font-semibold rounded-xl shadow-2xl hover:scale-105 transition-all duration-300"
+          >
+            Get Started Now
+          </Button>
+        </div>
+
+        {/* Bonus Feature Callout */}
+        <div className="bg-gradient-to-r from-amber-500/20 to-orange-500/20 backdrop-blur-md border border-amber-400/30 rounded-2xl p-6">
+          <div className="flex items-center justify-center mb-4">
+            <Crown className="text-amber-400 mr-2" size={24} />
+            <h4 className="text-xl font-bold text-white">Premium Bonus</h4>
+          </div>
+          <p className="text-amber-100 text-sm">
+            <strong>Multi-Location Support:</strong> For families with multiple houses or businesses with multiple offices, 
+            premium plans include management of up to 5 different network locations from a single dashboard.
+          </p>
+        </div>
       </div>
     </div>
   );

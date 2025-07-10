@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
+import { useEffect } from "react";
 import Index from "./pages/Index";
 import LandingPage from "./pages/LandingPage";
 import DevicesPage from "./pages/DevicesPage";
@@ -32,6 +33,24 @@ const queryClient = new QueryClient({
 });
 
 function App() {
+  useEffect(() => {
+    // Apply theme class to body based on subscription status
+    const updateTheme = () => {
+      const isPremium = localStorage.getItem('demo-premium') === 'true';
+      if (isPremium) {
+        document.body.className = 'premium-theme bg-gradient-to-br from-slate-900 via-purple-900 to-slate-800 text-white';
+      } else {
+        document.body.className = 'basic-theme';
+      }
+    };
+
+    updateTheme();
+    
+    // Listen for storage changes to update theme
+    window.addEventListener('storage', updateTheme);
+    return () => window.removeEventListener('storage', updateTheme);
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
