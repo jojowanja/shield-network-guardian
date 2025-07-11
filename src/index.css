@@ -5,39 +5,41 @@
 
 /* Premium Theme Styles */
 .premium-theme {
-  --background: 222.2 84% 4.9%;
+  --background: 210 40% 4%;
   --foreground: 210 40% 98%;
-  --card: 222.2 84% 4.9%;
+  --card: 212 84% 8%;
   --card-foreground: 210 40% 98%;
-  --popover: 222.2 84% 4.9%;
+  --popover: 212 84% 8%;
   --popover-foreground: 210 40% 98%;
   --primary: 262.1 83.3% 57.8%;
   --primary-foreground: 210 40% 98%;
-  --secondary: 217.2 32.6% 17.5%;
+  --secondary: 215 32.6% 15%;
   --secondary-foreground: 210 40% 98%;
-  --muted: 217.2 32.6% 17.5%;
+  --muted: 215 32.6% 12%;
   --muted-foreground: 215 20.2% 65.1%;
-  --accent: 217.2 32.6% 17.5%;
+  --accent: 262.1 83.3% 57.8%;
   --accent-foreground: 210 40% 98%;
-  --destructive: 0 62.8% 30.6%;
+  --destructive: 0 62.8% 50.6%;
   --destructive-foreground: 210 40% 98%;
-  --border: 217.2 32.6% 17.5%;
-  --input: 217.2 32.6% 17.5%;
+  --border: 215 32.6% 15%;
+  --input: 215 32.6% 15%;
   --ring: 262.1 83.3% 57.8%;
   --radius: 0.75rem;
   --gradient-primary: linear-gradient(135deg, hsl(262.1 83.3% 57.8%), hsl(282.1 83.3% 67.8%));
-  --gradient-secondary: linear-gradient(135deg, hsl(217.2 32.6% 17.5%), hsl(237.2 32.6% 27.5%));
+  --gradient-secondary: linear-gradient(135deg, hsl(262.1 83.3% 45%), hsl(282.1 83.3% 55%));
+  --gradient-hero: linear-gradient(135deg, hsl(262.1 83.3% 57.8%), hsl(240 100% 27%));
   --shadow-premium: 0 25px 50px -12px hsl(262.1 83.3% 57.8% / 0.4);
+  --shadow-glow: 0 0 40px hsl(262.1 83.3% 57.8% / 0.3);
 }
 
 .basic-theme {
-  --background: 0 0% 100%;
+  --background: 210 40% 98%;
   --foreground: 222.2 84% 4.9%;
   --card: 0 0% 100%;
   --card-foreground: 222.2 84% 4.9%;
   --popover: 0 0% 100%;
   --popover-foreground: 222.2 84% 4.9%;
-  --primary: 221.2 83.2% 53.3%;
+  --primary: 214 84% 45%;
   --primary-foreground: 210 40% 98%;
   --secondary: 210 40% 96%;
   --secondary-foreground: 222.2 84% 4.9%;
@@ -49,8 +51,11 @@
   --destructive-foreground: 210 40% 98%;
   --border: 214.3 31.8% 91.4%;
   --input: 214.3 31.8% 91.4%;
-  --ring: 221.2 83.2% 53.3%;
+  --ring: 214 84% 45%;
   --radius: 0.5rem;
+  --gradient-primary: linear-gradient(135deg, hsl(214 84% 45%), hsl(214 84% 55%));
+  --gradient-secondary: linear-gradient(135deg, hsl(210 40% 96%), hsl(210 40% 94%));
+  --shadow-basic: 0 4px 12px -2px hsl(214 84% 45% / 0.2);
 }
 
 @layer base {
@@ -144,7 +149,23 @@
 
 @layer components {
   .dashboard-card {
-    @apply bg-white dark:bg-card rounded-lg shadow-md p-4 border border-border;
+    @apply bg-card rounded-lg shadow-md p-4 border border-border;
+  }
+  
+  .premium-card {
+    @apply bg-gradient-to-br from-card to-muted/50 border-primary/20 shadow-lg;
+  }
+  
+  .basic-card {
+    @apply bg-card border-border shadow-sm;
+  }
+  
+  .premium-button {
+    @apply bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground shadow-lg;
+  }
+  
+  .basic-button {
+    @apply bg-primary hover:bg-primary/90 text-primary-foreground;
   }
   
   .network-pulse {
@@ -169,5 +190,21 @@
   
   .shield-gradient {
     @apply bg-gradient-to-r from-shield to-shield-secondary;
+  }
+  
+  .premium-glow {
+    @apply shadow-[var(--shadow-glow)];
+  }
+  
+  .basic-shadow {
+    @apply shadow-[var(--shadow-basic)];
+  }
+  
+  .notification-item {
+    @apply p-3 border-b border-border last:border-0 hover:bg-muted/50 transition-colors;
+  }
+  
+  .optimizing {
+    @apply animate-pulse bg-gradient-to-r from-primary/20 to-accent/20;
   }
 }

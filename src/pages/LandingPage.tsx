@@ -394,25 +394,25 @@ const LandingPage = () => {
               return (
                 <Card 
                   key={planKey}
-                  className="bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/15 transition-all duration-300 cursor-pointer group hover:scale-105"
+                  className="bg-white/15 backdrop-blur-lg border-white/30 hover:bg-white/20 transition-all duration-300 cursor-pointer group hover:scale-105 shadow-2xl"
                   onClick={() => setSelectedPlan(planKey)}
                 >
                   <CardHeader className="text-center">
-                    <div className="mx-auto w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                      <PlanIcon size={32} className="text-white" />
+                    <div className="mx-auto w-20 h-20 bg-gradient-to-br from-primary to-accent rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                      <PlanIcon size={36} className="text-white" />
                     </div>
-                    <CardTitle className="text-white text-xl">{plan.title}</CardTitle>
-                    <CardDescription className="text-blue-200">
+                    <CardTitle className="text-white text-2xl font-bold mb-2">{plan.title}</CardTitle>
+                    <CardDescription className="text-blue-100 text-lg">
                       {plan.subtitle}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="text-center">
-                    <p className="text-sm text-blue-200 mb-4">{plan.description}</p>
+                    <p className="text-sm text-blue-100 mb-6 leading-relaxed">{plan.description}</p>
                     <Button 
-                      variant="outline" 
-                      className="w-full border-white/30 text-white hover:bg-white/10"
+                      className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white font-semibold py-3 px-6 rounded-xl shadow-lg transition-all duration-300 hover:scale-105 border-0"
                     >
-                      Learn More
+                      <PlanIcon size={18} className="mr-2" />
+                      Select {plan.title.replace('🏠 ', '').replace('🎓 ', '').replace('💼 ', '')}
                     </Button>
                   </CardContent>
                 </Card>

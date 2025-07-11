@@ -2,8 +2,10 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Activity, Shield, Wifi, Download, Upload } from "lucide-react";
+import { Activity, Shield, Wifi, Download, Upload, X, Trash2 } from "lucide-react";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 
 interface ActivityEvent {
   id: string;
@@ -15,6 +17,15 @@ interface ActivityEvent {
 
 export const RealtimeActivityFeed = () => {
   const [activities, setActivities] = useState<ActivityEvent[]>([]);
+  const { isPremium } = useSubscription();
+  
+  const clearAllNotifications = () => {
+    setActivities([]);
+  };
+  
+  const removeNotification = (id: string) => {
+    setActivities(prev => prev.filter(activity => activity.id !== id));
+  };
 
   useEffect(() => {
     // Simulate real-time activity events
@@ -30,7 +41,7 @@ export const RealtimeActivityFeed = () => {
 
       const randomEvent = events[Math.floor(Math.random() * events.length)];
       const newActivity: ActivityEvent = {
-        id: Date.now().toString(),
+        id: `${Date.now()}-${Math.random()}`,
         timestamp: new Date(),
         type: randomEvent.type as ActivityEvent["type"],
         message: randomEvent.message,
@@ -69,14 +80,24 @@ export const RealtimeActivityFeed = () => {
   };
 
   return (
-    <Card className="h-full">
+    <Card className={`h-full ${isPremium ? 'premium-card premium-glow' : 'basic-card basic-shadow'}`}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Activity className="text-shield-accent" />
+          <Activity className="text-primary" />
           Real-time Activity
           <Badge variant="outline" className="ml-auto animate-pulse">
             Live
           </Badge>
+          {activities.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearAllNotifications}
+              className="ml-2 h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground"
+            >
+              <Trash2 size={14} />
+            </Button>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -85,19 +106,29 @@ export const RealtimeActivityFeed = () => {
             {activities.map((activity) => (
               <div
                 key={activity.id}
-                className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-muted/40 animate-fade-in"
+                className="notification-item group animate-fade-in"
               >
-                {getIcon(activity.type)}
-                <div className="flex-1 space-y-1">
-                  <p className="text-sm font-medium">{activity.message}</p>
-                  <div className="flex items-center gap-2">
-                    <Badge className={getStatusColor(activity.status)} variant="secondary">
-                      {activity.status}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground">
-                      {activity.timestamp.toLocaleTimeString()}
-                    </span>
+                <div className="flex items-start gap-3">
+                  {getIcon(activity.type)}
+                  <div className="flex-1 space-y-1">
+                    <p className="text-sm font-medium">{activity.message}</p>
+                    <div className="flex items-center gap-2">
+                      <Badge className={getStatusColor(activity.status)} variant="secondary">
+                        {activity.status}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">
+                        {activity.timestamp.toLocaleTimeString()}
+                      </span>
+                    </div>
                   </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeNotification(activity.id)}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                  >
+                    <X size={12} />
+                  </Button>
                 </div>
               </div>
             ))}

@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,8 +7,29 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 
 const SettingsPage = () => {
+  const { toast } = useToast();
+  const { isPremium } = useSubscription();
+  const [settings, setSettings] = useState({
+    realTime: true,
+    notifications: true,
+    autoScan: true,
+    intrusionDetection: true,
+    deviceAlerts: true,
+    securityAlerts: true,
+  });
+
+  const handleSettingChange = (key: string, value: boolean) => {
+    setSettings(prev => ({ ...prev, [key]: value }));
+    toast({
+      title: "Setting Updated",
+      description: `${key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} has been ${value ? 'enabled' : 'disabled'}`,
+    });
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -19,7 +41,7 @@ const SettingsPage = () => {
         </div>
         
         <div className="grid gap-6">
-          <Card>
+          <Card className={isPremium ? "premium-card" : "basic-card"}>
             <CardHeader>
               <CardTitle>Network Settings</CardTitle>
               <CardDescription>
@@ -29,15 +51,27 @@ const SettingsPage = () => {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <Label htmlFor="real-time">Real-time Monitoring</Label>
-                <Switch id="real-time" defaultChecked />
+                <Switch 
+                  id="real-time" 
+                  checked={settings.realTime}
+                  onCheckedChange={(checked) => handleSettingChange('realTime', checked)}
+                />
               </div>
               <div className="flex items-center justify-between">
                 <Label htmlFor="notifications">Push Notifications</Label>
-                <Switch id="notifications" defaultChecked />
+                <Switch 
+                  id="notifications" 
+                  checked={settings.notifications}
+                  onCheckedChange={(checked) => handleSettingChange('notifications', checked)}
+                />
               </div>
               <div className="flex items-center justify-between">
                 <Label htmlFor="auto-scan">Auto Device Scanning</Label>
-                <Switch id="auto-scan" defaultChecked />
+                <Switch 
+                  id="auto-scan" 
+                  checked={settings.autoScan}
+                  onCheckedChange={(checked) => handleSettingChange('autoScan', checked)}
+                />
               </div>
             </CardContent>
           </Card>
@@ -70,7 +104,7 @@ const SettingsPage = () => {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className={isPremium ? "premium-card" : "basic-card"}>
             <CardHeader>
               <CardTitle>Security Settings</CardTitle>
               <CardDescription>
@@ -80,21 +114,35 @@ const SettingsPage = () => {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <Label htmlFor="intrusion-detection">Intrusion Detection</Label>
-                <Switch id="intrusion-detection" defaultChecked />
+                <Switch 
+                  id="intrusion-detection" 
+                  checked={settings.intrusionDetection}
+                  onCheckedChange={(checked) => handleSettingChange('intrusionDetection', checked)}
+                />
               </div>
               <div className="flex items-center justify-between">
                 <Label htmlFor="device-alerts">New Device Alerts</Label>
-                <Switch id="device-alerts" defaultChecked />
+                <Switch 
+                  id="device-alerts" 
+                  checked={settings.deviceAlerts}
+                  onCheckedChange={(checked) => handleSettingChange('deviceAlerts', checked)}
+                />
               </div>
               <div className="flex items-center justify-between">
                 <Label htmlFor="security-alerts">Security Alerts</Label>
-                <Switch id="security-alerts" defaultChecked />
+                <Switch 
+                  id="security-alerts" 
+                  checked={settings.securityAlerts}
+                  onCheckedChange={(checked) => handleSettingChange('securityAlerts', checked)}
+                />
               </div>
             </CardContent>
           </Card>
 
           <div className="flex justify-end">
-            <Button>Save Settings</Button>
+            <Button className={isPremium ? "premium-button" : "basic-button"}>
+              Save Settings
+            </Button>
           </div>
         </div>
       </div>
