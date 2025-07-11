@@ -7,6 +7,12 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
+    "bun:dev": "bun --watch server.js",
+    "bun:start": "bun server.js",
+    "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:stop": "pm2 stop shield-network-pi",
+    "pm2:restart": "pm2 restart shield-network-pi",
+    "pm2:logs": "pm2 logs shield-network-pi",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",

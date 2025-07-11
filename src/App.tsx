@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { useEffect } from "react";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import Index from "./pages/Index";
 import LandingPage from "./pages/LandingPage";
 import DevicesPage from "./pages/DevicesPage";
@@ -52,33 +53,35 @@ function App() {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <SubscriptionProvider>
-          <div className="min-h-screen bg-background">
-            <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/dashboard" element={<Index />} />
-              <Route path="/overview" element={<OverviewPage />} />
-              <Route path="/connect" element={<ConnectPage />} />
-              <Route path="/devices" element={<DevicesPage />} />
-              <Route path="/guest-access" element={<GuestAccessPage />} />
-              <Route path="/security" element={<SecurityPage />} />
-              <Route path="/analytics" element={<AnalyticsPage />} />
-              <Route path="/settings" element={<SettingsPage />} />
-              <Route path="/subscription" element={<SubscriptionPage />} />
-              <Route path="/export" element={<ExportPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/pulse" element={<PulsePage />} />
-              <Route path="/interactive" element={<InteractivePage />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            <Toaster />
-            <SonnerToaster />
-          </div>
-        </SubscriptionProvider>
-      </BrowserRouter>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <SubscriptionProvider>
+            <div className="min-h-screen bg-background">
+              <Routes>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/dashboard" element={<Index />} />
+                <Route path="/overview" element={<OverviewPage />} />
+                <Route path="/connect" element={<ConnectPage />} />
+                <Route path="/devices" element={<DevicesPage />} />
+                <Route path="/guest-access" element={<GuestAccessPage />} />
+                <Route path="/security" element={<SecurityPage />} />
+                <Route path="/analytics" element={<AnalyticsPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/subscription" element={<SubscriptionPage />} />
+                <Route path="/export" element={<ExportPage />} />
+                <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/pulse" element={<PulsePage />} />
+                <Route path="/interactive" element={<InteractivePage />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+              <Toaster />
+              <SonnerToaster />
+            </div>
+          </SubscriptionProvider>
+        </BrowserRouter>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 
