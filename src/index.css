@@ -147,6 +147,32 @@
   }
 }
 
+/* Light theme visibility fixes for dashboard */
+.light-theme .text-foreground,
+.light-theme .text-card-foreground,
+.light-theme .text-muted-foreground {
+  color: hsl(var(--foreground)) !important;
+  opacity: 1 !important;
+}
+
+.light-theme .bg-card {
+  background-color: hsl(var(--card)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+}
+
+.light-theme .card {
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
+}
+
+.light-theme h1, .light-theme h2, .light-theme h3, .light-theme h4, .light-theme h5, .light-theme h6 {
+  color: hsl(var(--foreground)) !important;
+}
+
+.light-theme p, .light-theme span, .light-theme div {
+  color: hsl(var(--foreground));
+}
+
 @layer components {
   .dashboard-card {
     @apply bg-card rounded-lg shadow-md p-4 border border-border;

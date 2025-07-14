@@ -1,30 +1,37 @@
 
-import { GuardianShield } from "@/components/GuardianShield";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { RealtimeActivityFeed } from "@/components/RealtimeActivityFeed";
 import { DownloadsManager } from "@/components/DownloadsManager";
 import { UpgradePrompt } from "@/components/UpgradePrompt";
+import { PlanDashboard } from "@/components/PlanDashboard";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 
 const Index = () => {
-  const { isPremium } = useSubscription();
+  const { isPremium, planType } = useSubscription();
   
-  // Simulate device count and usage data
-  const deviceCount = 12;
+  // Simulate device count and usage data based on plan type
+  const getDeviceCount = () => {
+    switch (planType) {
+      case 'home': return 12;
+      case 'school': return 250;
+      case 'work': return 89;
+      default: return 12;
+    }
+  };
+  
+  const deviceCount = getDeviceCount();
   const usage = "high" as const;
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="w-full">
-          <GuardianShield />
-        </div>
+        <PlanDashboard />
         
         {!isPremium && (
           <UpgradePrompt 
             deviceCount={deviceCount}
             usage={usage}
-            currentPlan="home"
+            currentPlan={planType}
           />
         )}
         

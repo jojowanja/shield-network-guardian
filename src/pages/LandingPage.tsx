@@ -1,31 +1,31 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AboutSection } from "@/components/AboutSection";
+import { PlanComparison } from "@/components/PlanComparison";
 import { 
   Shield, 
-  Wifi, 
-  Lock, 
-  BarChart3, 
+  Home, 
+  School, 
+  Building2, 
+  ArrowRight, 
   CheckCircle, 
-  Activity, 
-  Database, 
-  Eye,
-  Home,
-  GraduationCap,
-  Building2,
-  Crown,
   Star,
-  Users,
-  Router,
-  AlertTriangle,
-  TrendingUp,
-  BrainCircuit,
-  UserCheck,
   Zap,
-  FileText,
-  Palette
+  Users,
+  BarChart3,
+  Wifi,
+  Lock,
+  Info,
+  DollarSign,
+  Activity,
+  Database,
+  Eye,
+  GraduationCap,
+  Crown
 } from "lucide-react";
 
 type PlanType = 'home' | 'school' | 'work';
@@ -92,7 +92,7 @@ const LandingPage = () => {
       }
     },
     school: {
-      icon: GraduationCap,
+      icon: School,
       title: "🎓 School",
       subtitle: "Network Management for Education",
       description: "Designed for schools, libraries, and educational institutions.",
@@ -362,91 +362,147 @@ const LandingPage = () => {
     );
   }
 
+  // Main landing page content with enhanced information
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 flex items-center justify-center relative overflow-hidden">
-      {/* Background Animation */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-cyan-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl animate-pulse delay-500"></div>
-      </div>
-
-      <div className="relative z-10 text-center max-w-6xl mx-auto px-6 py-12">
-        {/* Logo and Header */}
-        <div className="mx-auto w-24 h-24 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-3xl flex items-center justify-center mb-8 shadow-2xl animate-float">
-          <Shield size={48} className="text-white" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 text-white">
+      <div className="container mx-auto px-6 py-12">
+        {/* Header */}
+        <div className="text-center mb-16">
+          <div className="flex items-center justify-center mb-6">
+            <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-2xl flex items-center justify-center mr-4">
+              <Shield size={32} className="text-white" />
+            </div>
+            <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent">
+              Shield Network Guardian
+            </h1>
+          </div>
+          <p className="text-xl text-blue-200 mb-8 max-w-3xl mx-auto">
+            Your Smart WiFi Guardian for Home, School & Work
+          </p>
+          <p className="text-lg text-blue-300 max-w-2xl mx-auto">
+            Advanced AI-powered network security and optimization platform designed to protect and enhance your digital infrastructure.
+          </p>
         </div>
 
-        <h1 className="text-6xl font-bold text-white mb-4 animate-fade-in">
-          Shield Network Guardian
-        </h1>
-        
-        <p className="text-2xl text-blue-200 mb-4 animate-fade-in delay-200">
-          Your Smart WiFi Guardian for Home, School & Work
-        </p>
+        {/* Main Content Tabs */}
+        <Tabs defaultValue="plans" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-12 bg-white/10">
+            <TabsTrigger value="plans" className="text-white data-[state=active]:bg-blue-500">
+              <DollarSign className="w-4 h-4 mr-2" />
+              Choose Plans
+            </TabsTrigger>
+            <TabsTrigger value="about" className="text-white data-[state=active]:bg-green-500">
+              <Info className="w-4 h-4 mr-2" />
+              About Us
+            </TabsTrigger>
+            <TabsTrigger value="compare" className="text-white data-[state=active]:bg-purple-500">
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Compare Plans
+            </TabsTrigger>
+          </TabsList>
 
-        <div className="w-full max-w-4xl mx-auto border-t border-b border-white/20 py-8 mb-12">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {(Object.keys(plans) as PlanType[]).map((planKey) => {
-              const plan = plans[planKey];
-              const PlanIcon = plan.icon;
-              
-              return (
-                <Card 
-                  key={planKey}
-                  className="bg-white/15 backdrop-blur-lg border-white/30 hover:bg-white/20 transition-all duration-300 cursor-pointer group hover:scale-105 shadow-2xl"
-                  onClick={() => setSelectedPlan(planKey)}
-                >
-                  <CardHeader className="text-center">
-                    <div className="mx-auto w-20 h-20 bg-gradient-to-br from-primary to-accent rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                      <PlanIcon size={36} className="text-white" />
+          <TabsContent value="plans">
+            {/* Plan Selection Cards */}
+            <div className="grid md:grid-cols-3 gap-8 mb-16">
+              {(Object.keys(plans) as PlanType[]).map((planKey) => {
+                const plan = plans[planKey];
+                const PlanIcon = plan.icon;
+                
+                return (
+                  <Card 
+                    key={planKey}
+                    className={`cursor-pointer transition-all duration-300 transform hover:scale-105 border-2 ${
+                      selectedPlan === planKey 
+                        ? 'border-blue-500 bg-blue-50/10 shadow-2xl shadow-blue-500/20' 
+                        : 'border-white/20 bg-white/5 hover:border-blue-400 hover:bg-blue-50/5'
+                    }`}
+                    onClick={() => setSelectedPlan(planKey)}
+                  >
+                    <CardHeader className="text-center">
+                      <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                        <PlanIcon size={32} className="text-white" />
+                      </div>
+                      <CardTitle className="text-2xl text-white">{plan.title}</CardTitle>
+                      <CardDescription className="text-blue-200">
+                        {plan.subtitle}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="text-center">
+                      <p className="text-blue-300 mb-4">{plan.description}</p>
+                      {selectedPlan === planKey && (
+                        <Button 
+                          className="w-full mt-6 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg"
+                          onClick={() => handleGetStarted(planKey)}
+                        >
+                          Choose {plan.title.replace('🏠 ', '').replace('🎓 ', '').replace('💼 ', '')} Plan <ArrowRight className="ml-2 h-4 w-4" />
+                        </Button>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+
+            {/* Quick Start Option */}
+            <div className="text-center mb-16">
+              <Card className="bg-white/5 border-white/20 max-w-md mx-auto">
+                <CardContent className="p-6">
+                  <Zap className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-white mb-2">Quick Start</h3>
+                  <p className="text-blue-200 mb-4">
+                    Not sure which plan? Start with our smart setup wizard
+                  </p>
+                  <Button 
+                    onClick={() => handleGetStarted()}
+                    className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600"
+                  >
+                    Get Started Now
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Bonus Feature Callout */}
+            <div className="text-center">
+              <Card className="bg-gradient-to-r from-indigo-500/20 to-purple-500/20 border-indigo-500/30 max-w-4xl mx-auto">
+                <CardContent className="p-8">
+                  <div className="flex items-center justify-center mb-4">
+                    <Star className="w-8 h-8 text-yellow-400 mr-2" />
+                    <h3 className="text-2xl font-bold text-white">Bonus Features</h3>
+                  </div>
+                  <p className="text-blue-200 mb-6">
+                    All plans include 24/7 monitoring, automatic security updates, and our mobile app for remote management
+                  </p>
+                  <div className="grid md:grid-cols-3 gap-6">
+                    <div className="text-center">
+                      <Shield className="w-8 h-8 text-blue-400 mx-auto mb-2" />
+                      <h4 className="font-semibold text-white">AI Security</h4>
+                      <p className="text-sm text-blue-300">Machine learning threat detection</p>
                     </div>
-                    <CardTitle className="text-white text-2xl font-bold mb-2">{plan.title}</CardTitle>
-                    <CardDescription className="text-blue-100 text-lg">
-                      {plan.subtitle}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="text-center">
-                    <p className="text-sm text-blue-100 mb-6 leading-relaxed">{plan.description}</p>
-                    <Button 
-                      className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white font-semibold py-3 px-6 rounded-xl shadow-lg transition-all duration-300 hover:scale-105 border-0"
-                    >
-                      <PlanIcon size={18} className="mr-2" />
-                      Select {plan.title.replace('🏠 ', '').replace('🎓 ', '').replace('💼 ', '')}
-                    </Button>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
+                    <div className="text-center">
+                      <Wifi className="w-8 h-8 text-green-400 mx-auto mb-2" />
+                      <h4 className="font-semibold text-white">Smart Optimization</h4>
+                      <p className="text-sm text-blue-300">Automatic performance tuning</p>
+                    </div>
+                    <div className="text-center">
+                      <BarChart3 className="w-8 h-8 text-purple-400 mx-auto mb-2" />
+                      <h4 className="font-semibold text-white">Advanced Analytics</h4>
+                      <p className="text-sm text-blue-300">Detailed insights and reporting</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
 
-        {/* Quick Start Option */}
-        <div className="bg-white/5 backdrop-blur-md border border-white/20 rounded-2xl p-8 mb-8">
-          <h3 className="text-2xl font-bold text-white mb-4">Not sure which plan? Start with Home</h3>
-          <p className="text-blue-200 mb-6">
-            Jump right into our most popular plan and explore all the features
-          </p>
-          <Button 
-            onClick={() => handleGetStarted('home')}
-            size="lg"
-            className="bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 text-white px-12 py-4 text-lg font-semibold rounded-xl shadow-2xl hover:scale-105 transition-all duration-300"
-          >
-            Get Started Now
-          </Button>
-        </div>
+          <TabsContent value="about">
+            <AboutSection />
+          </TabsContent>
 
-        {/* Bonus Feature Callout */}
-        <div className="bg-gradient-to-r from-amber-500/20 to-orange-500/20 backdrop-blur-md border border-amber-400/30 rounded-2xl p-6">
-          <div className="flex items-center justify-center mb-4">
-            <Crown className="text-amber-400 mr-2" size={24} />
-            <h4 className="text-xl font-bold text-white">Premium Bonus</h4>
-          </div>
-          <p className="text-amber-100 text-sm">
-            <strong>Multi-Location Support:</strong> For families with multiple houses or businesses with multiple offices, 
-            premium plans include management of up to 5 different network locations from a single dashboard.
-          </p>
-        </div>
+          <TabsContent value="compare">
+            <PlanComparison />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
