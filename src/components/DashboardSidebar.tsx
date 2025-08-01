@@ -73,14 +73,14 @@ const DashboardSidebar = ({ isOpen, onClose }: DashboardSidebarProps) => {
             <Button
               key={item.label}
               variant="ghost"
-              className="justify-start px-4 py-2 rounded-md hover:bg-secondary"
+              className="justify-start px-4 py-2 rounded-md hover:bg-secondary text-foreground border-transparent"
               onClick={() => {
                 navigate(item.path);
                 onClose();
               }}
             >
-              <item.icon className="w-4 h-4 mr-2" />
-              {item.label}
+              <item.icon className="w-4 h-4 mr-2 text-foreground" />
+              <span className="text-foreground">{item.label}</span>
             </Button>
           ))}
         </div>

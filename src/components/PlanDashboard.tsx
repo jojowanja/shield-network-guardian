@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 
 export function PlanDashboard() {
-  const { planType, isPremium } = useSubscription();
+  const { planType, isPremium, setPlanType } = useSubscription();
 
   const planContent = {
     home: {
@@ -128,6 +128,24 @@ export function PlanDashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Plan Selection */}
+      <div className="grid grid-cols-3 gap-4 mb-6">
+        {Object.entries(planContent).map(([key, plan]) => {
+          const Icon = plan.icon;
+          return (
+            <Button
+              key={key}
+              variant={planType === key ? "default" : "outline"}
+              className="h-auto p-4 flex flex-col items-center space-y-2"
+              onClick={() => setPlanType(key as any)}
+            >
+              <Icon className="h-6 w-6" />
+              <span className="text-sm font-medium">{key.charAt(0).toUpperCase() + key.slice(1)}</span>
+            </Button>
+          );
+        })}
+      </div>
+
       {/* Plan Header */}
       <Card className="border-l-4 border-l-primary">
         <CardHeader>
