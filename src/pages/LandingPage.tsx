@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AboutSection } from "@/components/AboutSection";
 import { PlanComparison } from "@/components/PlanComparison";
+import { PlanQuestionnaire } from "@/components/PlanQuestionnaire";
 import { 
   Shield, 
   Home, 
@@ -34,6 +35,7 @@ const LandingPage = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<PlanType | null>(null);
+  const [showQuestionnaire, setShowQuestionnaire] = useState(false);
 
   const loadingSteps = [
     { icon: Database, text: "Loading Network Resources...", delay: 500 },
@@ -144,6 +146,29 @@ const LandingPage = () => {
       }
     }
   };
+
+  if (showQuestionnaire) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 py-12 px-4">
+        <div className="container mx-auto">
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center mb-6">
+              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-2xl flex items-center justify-center mr-4">
+                <Shield size={32} className="text-white" />
+              </div>
+              <h1 className="text-3xl font-bold text-white">Find Your Perfect Plan</h1>
+            </div>
+            <p className="text-blue-200">Answer a few questions to get a personalized recommendation</p>
+          </div>
+          
+          <PlanQuestionnaire
+            onComplete={handleGetStarted}
+            onBack={() => setShowQuestionnaire(false)}
+          />
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -453,10 +478,10 @@ const LandingPage = () => {
                     Not sure which plan? Start with our smart setup wizard
                   </p>
                   <Button 
-                    onClick={() => handleGetStarted()}
+                    onClick={() => setShowQuestionnaire(true)}
                     className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600"
                   >
-                    Get Started Now
+                    Find My Perfect Plan
                   </Button>
                 </CardContent>
               </Card>
