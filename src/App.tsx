@@ -7,6 +7,7 @@ import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { useEffect } from "react";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { VoiceWelcome } from "@/components/VoiceWelcome";
 import Index from "./pages/Index";
 import LandingPage from "./pages/LandingPage";
 import DevicesPage from "./pages/DevicesPage";
@@ -77,6 +78,7 @@ function App() {
               </Routes>
               <Toaster />
               <SonnerToaster />
+              <VoiceWelcome />
             </div>
           </SubscriptionProvider>
         </BrowserRouter>

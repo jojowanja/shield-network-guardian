@@ -489,20 +489,20 @@ const LandingPage = () => {
 
             {/* Bonus Feature Callout */}
             <div className="text-center">
-              <Card className="bg-gradient-to-r from-indigo-500/20 to-purple-500/20 border-indigo-500/30 max-w-4xl mx-auto">
+              <Card className="bonus-features-card bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20 max-w-4xl mx-auto">
                 <CardContent className="p-8">
                   <div className="flex items-center justify-center mb-4">
-                    <Star className="w-8 h-8 text-yellow-400 mr-2" />
-                    <h3 className="text-2xl font-bold text-white">Bonus Features</h3>
+                    <Star className="w-8 h-8 text-primary mr-2" />
+                    <h3 className="text-2xl font-bold gradient-text-fix">Bonus Features</h3>
                   </div>
-                  <p className="text-blue-200 mb-6">
+                  <p className="gradient-text-fix mb-6">
                     All plans include 24/7 monitoring, automatic security updates, and our mobile app for remote management
                   </p>
                   <div className="grid md:grid-cols-3 gap-6">
                     <div className="text-center">
-                      <Shield className="w-8 h-8 text-blue-400 mx-auto mb-2" />
-                      <h4 className="font-semibold text-white">AI Security</h4>
-                      <p className="text-sm text-blue-300">Machine learning threat detection</p>
+                      <Shield className="w-8 h-8 text-primary mx-auto mb-2" />
+                      <h4 className="font-semibold gradient-text-fix">AI Security</h4>
+                      <p className="text-sm text-muted-foreground">Machine learning threat detection</p>
                     </div>
                     <div className="text-center">
                       <Wifi className="w-8 h-8 text-green-400 mx-auto mb-2" />
