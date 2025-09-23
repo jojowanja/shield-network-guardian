@@ -60,10 +60,10 @@ const DashboardSidebar = ({ isOpen, onClose }: DashboardSidebarProps) => {
           <Menu className="h-5 w-5" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-64 p-0 pt-6 border-r">
+      <SheetContent side="left" className="w-64 p-0 pt-6 border-r sidebar-visible sheet-content">
         <SheetHeader className="px-6 pb-4">
-          <SheetTitle>Dashboard</SheetTitle>
-          <SheetDescription>
+          <SheetTitle className="text-foreground">Dashboard</SheetTitle>
+          <SheetDescription className="text-muted-foreground">
             Manage your network and connected devices.
           </SheetDescription>
         </SheetHeader>
@@ -89,10 +89,10 @@ const DashboardSidebar = ({ isOpen, onClose }: DashboardSidebarProps) => {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
               <Avatar className="w-8 h-8">
-                <AvatarFallback>U</AvatarFallback>
+                <AvatarFallback className="text-foreground">U</AvatarFallback>
               </Avatar>
               <div className="flex flex-col">
-                <span className="font-medium text-sm">Guest User</span>
+                <span className="font-medium text-sm text-foreground">Guest User</span>
                 <span className="text-xs text-muted-foreground">
                   Testing Mode
                 </span>

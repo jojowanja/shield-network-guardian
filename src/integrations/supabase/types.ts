@@ -99,24 +99,33 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string | null
+          email: string | null
           full_name: string | null
           id: string
+          language: string | null
+          timezone: string | null
           updated_at: string | null
           username: string | null
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string | null
+          email?: string | null
           full_name?: string | null
           id: string
+          language?: string | null
+          timezone?: string | null
           updated_at?: string | null
           username?: string | null
         }
         Update: {
           avatar_url?: string | null
           created_at?: string | null
+          email?: string | null
           full_name?: string | null
           id?: string
+          language?: string | null
+          timezone?: string | null
           updated_at?: string | null
           username?: string | null
         }
@@ -162,6 +171,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_settings: {
+        Row: {
+          auto_device_scanning: boolean | null
+          created_at: string
+          device_alerts: boolean | null
+          id: string
+          intrusion_detection: boolean | null
+          pi_ip_address: string | null
+          push_notifications: boolean | null
+          real_time_monitoring: boolean | null
+          scan_interval: number | null
+          security_alerts: boolean | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          auto_device_scanning?: boolean | null
+          created_at?: string
+          device_alerts?: boolean | null
+          id?: string
+          intrusion_detection?: boolean | null
+          pi_ip_address?: string | null
+          push_notifications?: boolean | null
+          real_time_monitoring?: boolean | null
+          scan_interval?: number | null
+          security_alerts?: boolean | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          auto_device_scanning?: boolean | null
+          created_at?: string
+          device_alerts?: boolean | null
+          id?: string
+          intrusion_detection?: boolean | null
+          pi_ip_address?: string | null
+          push_notifications?: boolean | null
+          real_time_monitoring?: boolean | null
+          scan_interval?: number | null
+          security_alerts?: boolean | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {

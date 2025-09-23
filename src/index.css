@@ -149,6 +149,28 @@
   }
 }
 
+/* Sidebar visibility fixes for all themes */
+.sidebar-visible .text-foreground,
+.sidebar-visible .text-card-foreground,
+.sidebar-visible .text-muted-foreground {
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Ensure sidebar content is always visible */
+[data-sidebar="sidebar"] .text-foreground,
+[data-sidebar="sidebar"] .text-card-foreground,
+[data-sidebar="sidebar"] .text-muted-foreground {
+  color: hsl(var(--foreground)) !important;
+  opacity: 1 !important;
+}
+
+/* Sheet sidebar fixes */
+.sheet-content .text-foreground,
+.sheet-content span,
+.sheet-content button {
+  color: hsl(var(--foreground)) !important;
+}
+
 /* Light and Dark theme visibility fixes */
 .text-foreground {
   color: hsl(var(--foreground)) !important;
