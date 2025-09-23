@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Shield } from 'lucide-react';
+import { Shield, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface VoiceWelcomeProps {
@@ -7,15 +7,27 @@ interface VoiceWelcomeProps {
 }
 
 export const VoiceWelcome: React.FC<VoiceWelcomeProps> = ({ onComplete }) => {
+  const [isLoading, setIsLoading] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasPlayed, setHasPlayed] = useState(false);
 
-  const playWelcomeMessage = async () => {
+  const startWelcomeSequence = async () => {
     // Check if we've already played on this session
     if (hasPlayed || sessionStorage.getItem('welcome-played')) {
       return;
     }
 
+    // Show loading spinner first
+    setIsLoading(true);
+    
+    // Wait for loading animation (3 seconds)
+    setTimeout(() => {
+      setIsLoading(false);
+      playVoiceMessage();
+    }, 3000);
+  };
+
+  const playVoiceMessage = async () => {
     try {
       setIsPlaying(true);
       
@@ -40,10 +52,7 @@ export const VoiceWelcome: React.FC<VoiceWelcomeProps> = ({ onComplete }) => {
         setHasPlayed(true);
       };
 
-      // Small delay to ensure page is loaded
-      setTimeout(() => {
-        window.speechSynthesis.speak(utterance);
-      }, 1000);
+      window.speechSynthesis.speak(utterance);
 
     } catch (error) {
       console.log('Voice synthesis not available');
@@ -53,22 +62,31 @@ export const VoiceWelcome: React.FC<VoiceWelcomeProps> = ({ onComplete }) => {
   };
 
   useEffect(() => {
-    // Only play once per session and after a short delay
+    // Start the welcome sequence after a short delay
     const timer = setTimeout(() => {
-      playWelcomeMessage();
-    }, 2000);
+      startWelcomeSequence();
+    }, 1000);
 
     return () => clearTimeout(timer);
   }, []);
 
-  if (!isPlaying) {
+  if (!isLoading && !isPlaying) {
     return null;
   }
 
   return (
     <div className="fixed top-4 right-4 z-50 flex items-center space-x-2 bg-primary/90 text-primary-foreground px-4 py-2 rounded-lg shadow-lg animate-fade-in">
-      <Shield className="w-5 h-5 animate-pulse" />
-      <span className="text-sm font-medium">Shield Guardian Activated</span>
+      {isLoading ? (
+        <>
+          <Loader2 className="w-5 h-5 animate-spin" />
+          <span className="text-sm font-medium">Initializing Shield Guardian...</span>
+        </>
+      ) : (
+        <>
+          <Shield className="w-5 h-5 animate-pulse" />
+          <span className="text-sm font-medium">Shield Guardian Activated</span>
+        </>
+      )}
     </div>
   );
 };
