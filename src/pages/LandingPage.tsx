@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AboutSection } from "@/components/AboutSection";
-import { PlanComparison } from "@/components/PlanComparison";
+import PlanComparison from "@/components/PlanComparison";
 import { PlanQuestionnaire } from "@/components/PlanQuestionnaire";
 import { 
   Shield, 

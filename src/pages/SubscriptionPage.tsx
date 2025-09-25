@@ -1,6 +1,7 @@
 
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { PremiumFeatures } from "@/components/PremiumFeatures";
+import PlanComparison from "@/components/PlanComparison";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -124,36 +125,7 @@ const SubscriptionPage = () => {
           </CardContent>
         </Card>
 
-        {/* Theme Demo */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Palette className="mr-2 h-5 w-5" />
-              UI Theme Preview
-            </CardTitle>
-            <CardDescription>
-              See how your interface changes with premium subscription
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">
-                  Current: {isPremium ? 'Premium Gradient Theme' : 'Basic Light Theme'}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {isPremium 
-                    ? 'Sleek gradients, enhanced colors, and premium styling' 
-                    : 'Clean and simple interface with basic styling'
-                  }
-                </p>
-              </div>
-              <Button onClick={handleThemeDemo} variant="outline">
-                Toggle Theme Demo
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <PlanComparison />
         
         <PremiumFeatures />
       </div>

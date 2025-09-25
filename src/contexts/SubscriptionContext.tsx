@@ -146,6 +146,24 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
     return false;
   };
 
+  // Apply theme to body when subscription changes
+  useEffect(() => {
+    const applyTheme = () => {
+      const body = document.body;
+      // Remove existing theme classes
+      body.classList.remove('basic-theme', 'premium-theme');
+      
+      // Apply new theme
+      if (isPremium) {
+        body.classList.add('premium-theme');
+      } else {
+        body.classList.add('basic-theme');
+      }
+    };
+    
+    applyTheme();
+  }, [isPremium, subscriptionTier]);
+
   useEffect(() => {
     checkSubscription();
     

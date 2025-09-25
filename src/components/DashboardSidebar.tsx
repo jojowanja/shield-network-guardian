@@ -60,9 +60,9 @@ const DashboardSidebar = ({ isOpen, onClose }: DashboardSidebarProps) => {
           <Menu className="h-5 w-5" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-64 p-0 pt-6 border-r sidebar-visible sheet-content">
+      <SheetContent side="left" className="w-64 p-0 pt-6 border-r sidebar-visible sheet-content bg-card">
         <SheetHeader className="px-6 pb-4">
-          <SheetTitle className="text-foreground">Dashboard</SheetTitle>
+          <SheetTitle className="text-foreground font-semibold">Dashboard</SheetTitle>
           <SheetDescription className="text-muted-foreground">
             Manage your network and connected devices.
           </SheetDescription>
@@ -73,14 +73,14 @@ const DashboardSidebar = ({ isOpen, onClose }: DashboardSidebarProps) => {
             <Button
               key={item.label}
               variant="ghost"
-              className="justify-start px-4 py-2 rounded-md hover:bg-secondary text-foreground border-transparent"
+              className="justify-start px-4 py-2 rounded-md hover:bg-secondary text-foreground border-transparent w-full"
               onClick={() => {
                 navigate(item.path);
                 onClose();
               }}
             >
-              <item.icon className="w-4 h-4 mr-2 text-foreground" />
-              <span className="text-foreground">{item.label}</span>
+              <item.icon className="w-4 h-4 mr-2 text-foreground flex-shrink-0" />
+              <span className="text-foreground text-left flex-1">{item.label}</span>
             </Button>
           ))}
         </div>
