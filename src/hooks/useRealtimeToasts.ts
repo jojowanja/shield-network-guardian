@@ -87,11 +87,11 @@ export const useRealtimeToasts = () => {
         }, event.delay)
       );
 
-      // Periodic status updates
+      // Periodic status updates - reduced frequency
       const statusInterval = setInterval(() => {
         const statusMessages = [
           "Network health: Excellent",
-          "Security status: Protected",
+          "Security status: Protected", 
           "Connected devices: 12 active",
           "Bandwidth usage: 65% of capacity"
         ];
@@ -101,7 +101,7 @@ export const useRealtimeToasts = () => {
           description: randomMessage,
           duration: 3000,
         });
-      }, 30000); // Every 30 seconds
+      }, 60000); // Every 60 seconds instead of 30
 
       return () => {
         clearTimeout(welcomeTimeout);

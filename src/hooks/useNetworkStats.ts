@@ -141,11 +141,11 @@ export const useNetworkStats = () => {
     updateStats();
   }, []);
 
-  // Set up periodic updates
+  // Set up periodic updates with longer interval to reduce load
   useEffect(() => {
-    const intervalId = setInterval(updateStats, 5000); // Update every 5 seconds
+    const intervalId = setInterval(updateStats, 15000); // Update every 15 seconds
     return () => clearInterval(intervalId);
-  }, []);
+  }, [user]); // Add user dependency to restart interval on auth changes
 
   return { 
     stats, 
