@@ -1,8 +1,17 @@
-
 import { useState, useEffect } from "react";
-import { Session, User } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
 import { refreshUserSession, logSignInEvent } from "@/services/authService";
+
+interface User {
+  id: string;
+  email: string;
+  username?: string;
+  full_name?: string;
+  avatar_url?: string;
+}
+
+interface Session {
+  access_token: string;
+}
 
 export const useAuthState = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -10,24 +19,7 @@ export const useAuthState = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isNewUser, setIsNewUser] = useState(false);
 
-  const handleAuthStateChange = (event: string, session: Session | null) => {
-    console.log('Auth state change:', event, session?.user?.email || 'No user');
-    
-    setSession(session);
-    setUser(session?.user || null);
-    setIsLoading(false);
-    
-    // Log sign-in event for notifications (defer to avoid blocking)
-    if (event === 'SIGNED_IN' && session?.user) {
-      setTimeout(() => {
-        logSignInEvent(session.user.id);
-      }, 0);
-    }
-    
-    if (event === 'SIGNED_OUT') {
-      setIsNewUser(false);
-    }
-  };
+  // Remove the unused handleAuthStateChange function
 
   const updateIsNewUser = (value: boolean) => {
     setIsNewUser(value);
@@ -47,19 +39,10 @@ export const useAuthState = () => {
   };
 
   useEffect(() => {
-    console.log('Setting up auth state listener...');
+    console.log('Setting up auth state...');
     
-    // Set up auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
-
     // Get initial session
     refreshSession();
-
-    // Clean up subscription
-    return () => {
-      console.log('Cleaning up auth subscription...');
-      subscription.unsubscribe();
-    };
   }, []);
 
   return {

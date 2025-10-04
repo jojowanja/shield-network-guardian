@@ -1,7 +1,7 @@
-
 import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { supabase } from "@/integrations/supabase/client";
+import { backendWebSocket } from '@/services/backendWebSocket';
+import { BACKEND_CONFIG } from '@/config/backend';
 import { useToast } from './use-toast';
 
 export const useStatsSubscription = () => {
@@ -18,57 +18,49 @@ export const useStatsSubscription = () => {
   });
 
   useEffect(() => {
-    // Subscribe to network stats changes
-    const subscription = supabase
-      .channel('network-stats-channel')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'network_stats'
-        },
-        (payload) => {
-          console.log('Network stats change:', payload);
-          
-          // Invalidate and refetch stats query
-          queryClient.invalidateQueries({ queryKey: ['networkStats'] });
+    // Connect to WebSocket
+    backendWebSocket.connect();
 
-          const statsData = payload.new as any;
-          
-          // Update the usage stats based on new network data
-          setStats(prevStats => ({
-            ...prevStats,
-            mondayUsage: Math.max(prevStats.mondayUsage, statsData.download_speed / 4),
-            tuesdayUsage: Math.max(prevStats.tuesdayUsage, statsData.download_speed / 4)
-          }));
-          
-          // Enhanced toast notifications with more detailed information
-          if (statsData.stability < 80) {
-            toast({
-              title: 'Network Stability Alert',
-              description: `Network stability has dropped to ${statsData.stability.toFixed(1)}%`,
-              variant: 'destructive',
-            });
-          } else if (statsData.download_speed < 50) {
-            toast({
-              title: 'Network Speed Alert',
-              description: `Download speed has dropped to ${statsData.download_speed.toFixed(1)} Mbps`,
-              variant: 'destructive',
-            });
-          } else if (statsData.ping > 100) {
-            toast({
-              title: 'High Latency Alert',
-              description: `Network latency has increased to ${statsData.ping.toFixed(0)}ms`,
-              variant: 'destructive',
-            });
-          }
-        }
-      )
-      .subscribe();
+    const handleStatsUpdate = (statsData: any) => {
+      console.log('Network stats update:', statsData);
+      
+      // Invalidate and refetch stats query
+      queryClient.invalidateQueries({ queryKey: ['networkStats'] });
+
+      // Update the usage stats based on new network data
+      setStats(prevStats => ({
+        ...prevStats,
+        mondayUsage: Math.max(prevStats.mondayUsage, statsData.downloadSpeed / 4 || statsData.download_speed / 4),
+        tuesdayUsage: Math.max(prevStats.tuesdayUsage, statsData.downloadSpeed / 4 || statsData.download_speed / 4)
+      }));
+      
+      // Enhanced toast notifications with more detailed information
+      if (statsData.stability < 80) {
+        toast({
+          title: 'Network Stability Alert',
+          description: `Network stability has dropped to ${statsData.stability.toFixed(1)}%`,
+          variant: 'destructive',
+        });
+      } else if (statsData.downloadSpeed < 50 || statsData.download_speed < 50) {
+        const speed = statsData.downloadSpeed || statsData.download_speed;
+        toast({
+          title: 'Network Speed Alert',
+          description: `Download speed has dropped to ${speed.toFixed(1)} Mbps`,
+          variant: 'destructive',
+        });
+      } else if (statsData.ping > 100) {
+        toast({
+          title: 'High Latency Alert',
+          description: `Network latency has increased to ${statsData.ping.toFixed(0)}ms`,
+          variant: 'destructive',
+        });
+      }
+    };
+
+    backendWebSocket.on(BACKEND_CONFIG.WS_EVENTS.STATS_UPDATED, handleStatsUpdate);
 
     return () => {
-      subscription.unsubscribe();
+      backendWebSocket.off(BACKEND_CONFIG.WS_EVENTS.STATS_UPDATED, handleStatsUpdate);
     };
   }, [queryClient, toast]);
 

@@ -1,6 +1,5 @@
-
 import { createContext, useContext, ReactNode } from "react";
-import { AuthContextType } from "@/types/auth";
+import { AuthContextType, User } from "@/types/auth";
 import { useAuthState } from "@/hooks/useAuthState";
 import { signUpUser, signInUser, resetUserPassword, signOutUser } from "@/services/authService";
 
@@ -40,7 +39,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const signUp = async (email: string, password: string, userData?: any) => {
+  const signUp = async (email: string, password: string, userData?: any): Promise<{ error: any; user?: User }> => {
     return await signUpUser(email, password, userData);
   };
 

@@ -12,9 +12,9 @@ export const UserProfile = () => {
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    name: user?.user_metadata?.name || "Demo User",
+    name: user?.full_name || user?.username || "Demo User",
     email: user?.email || "demo@example.com",
-    phone: user?.user_metadata?.phone || "",
+    phone: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

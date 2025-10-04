@@ -1,5 +1,14 @@
+export interface User {
+  id: string;
+  email: string;
+  username?: string;
+  full_name?: string;
+  avatar_url?: string;
+}
 
-import { Session, User } from "@supabase/supabase-js";
+export interface Session {
+  access_token: string;
+}
 
 export interface AuthContextType {
   user: User | null;
