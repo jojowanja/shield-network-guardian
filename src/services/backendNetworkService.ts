@@ -227,6 +227,70 @@ class BackendNetworkService {
 
     return data;
   }
+  // User Profile & Settings
+  async getProfile() {
+    console.log('Fetching profile...');
+    const { data, error } = await this.request(
+      BACKEND_CONFIG.ENDPOINTS.PROFILE
+    );
+
+    if (error) {
+      console.error('Error fetching profile:', error);
+      return null;
+    }
+
+    return data;
+  }
+
+  async updateProfile(updates: any) {
+    console.log('Updating profile...');
+    const { data, error } = await this.request(
+      BACKEND_CONFIG.ENDPOINTS.PROFILE,
+      {
+        method: 'PUT',
+        body: JSON.stringify(updates),
+      }
+    );
+
+    if (error) {
+      console.error('Error updating profile:', error);
+      throw new Error(error);
+    }
+
+    return data;
+  }
+
+  async getSettings() {
+    console.log('Fetching settings...');
+    const { data, error } = await this.request(
+      BACKEND_CONFIG.ENDPOINTS.SETTINGS
+    );
+
+    if (error) {
+      console.error('Error fetching settings:', error);
+      return null;
+    }
+
+    return data;
+  }
+
+  async updateSettings(updates: any) {
+    console.log('Updating settings...');
+    const { data, error } = await this.request(
+      BACKEND_CONFIG.ENDPOINTS.SETTINGS,
+      {
+        method: 'PUT',
+        body: JSON.stringify(updates),
+      }
+    );
+
+    if (error) {
+      console.error('Error updating settings:', error);
+      throw new Error(error);
+    }
+
+    return data;
+  }
 }
 
 export const backendNetworkService = new BackendNetworkService();

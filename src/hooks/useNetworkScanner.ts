@@ -1,7 +1,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from './use-toast';
-import { supabase } from "@/integrations/supabase/client";
+import { backendNetworkService } from '@/services/backendNetworkService';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ScannedDevice {
   ip: string;
@@ -18,6 +19,7 @@ export const useNetworkScanner = () => {
   const [scannedDevices, setScannedDevices] = useState<ScannedDevice[]>([]);
   const [scanProgress, setScanProgress] = useState(0);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   // Simulate real-time network scanning
   const performNetworkScan = useCallback(async () => {
@@ -60,21 +62,21 @@ export const useNetworkScanner = () => {
       });
 
       // Log to security events if user is authenticated
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          await supabase.from('security_events').insert(
-            newDevices.map(device => ({
-              user_id: user.id,
-              event_type: 'new_device' as const,
-              severity: 'medium' as const,
+      if (user) {
+        try {
+          for (const device of newDevices) {
+            await backendNetworkService.addSecurityEvent({
+              deviceId: null,
+              eventType: 'new_device',
+              severity: 'medium',
               description: `New device detected: ${device.hostname || device.ip} (${device.mac})`,
+              timestamp: new Date().toISOString(),
               resolved: false
-            }))
-          );
+            });
+          }
+        } catch (error) {
+          console.error('Error logging security events:', error);
         }
-      } catch (error) {
-        console.error('Error logging security events:', error);
       }
     }
 

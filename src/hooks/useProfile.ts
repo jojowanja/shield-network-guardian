@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { backendNetworkService } from '@/services/backendNetworkService';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Profile {
   id: string;
@@ -28,42 +29,33 @@ export const useProfile = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   const fetchProfile = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
       if (!user) {
         setLoading(false);
         return;
       }
 
-      // Fetch profile
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (profileError && profileError.code !== 'PGRST116') {
-        console.error('Error fetching profile:', profileError);
-        toast.error('Failed to load profile');
-      } else if (profileData) {
-        setProfile(profileData);
+      // Fetch profile from backend
+      const profileData = await backendNetworkService.getProfile();
+      if (profileData) {
+        setProfile({
+          id: user.id,
+          full_name: user.full_name || null,
+          email: user.email,
+          avatar_url: user.avatar_url || null,
+          timezone: 'UTC',
+          language: 'en',
+          username: user.username || null
+        });
       }
 
-      // Fetch settings
-      const { data: settingsData, error: settingsError } = await supabase
-        .from('user_settings')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
-      if (settingsError && settingsError.code !== 'PGRST116') {
-        console.error('Error fetching settings:', settingsError);
-        toast.error('Failed to load settings');
-      } else if (settingsData) {
-        setSettings(settingsData);
+      // Fetch settings from backend
+      const settingsData = await backendNetworkService.getSettings();
+      if (settingsData) {
+        setSettings(settingsData as UserSettings);
       }
       
     } catch (error) {
@@ -76,26 +68,12 @@ export const useProfile = () => {
 
   const updateProfile = async (updates: Partial<Profile>) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
       if (!user) {
         toast.error('User not authenticated');
         return false;
       }
 
-      const { error } = await supabase
-        .from('profiles')
-        .upsert({ 
-          id: user.id, 
-          ...updates 
-        });
-
-      if (error) {
-        console.error('Error updating profile:', error);
-        toast.error('Failed to update profile');
-        return false;
-      }
-
+      await backendNetworkService.updateProfile(updates);
       toast.success('Profile updated successfully');
       await fetchProfile(); // Refresh data
       return true;
@@ -108,26 +86,12 @@ export const useProfile = () => {
 
   const updateSettings = async (updates: Partial<UserSettings>) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
       if (!user) {
         toast.error('User not authenticated');
         return false;
       }
 
-      const { error } = await supabase
-        .from('user_settings')
-        .upsert({ 
-          user_id: user.id, 
-          ...updates 
-        });
-
-      if (error) {
-        console.error('Error updating settings:', error);
-        toast.error('Failed to update settings');
-        return false;
-      }
-
+      await backendNetworkService.updateSettings(updates);
       toast.success('Settings updated successfully');
       await fetchProfile(); // Refresh data
       return true;
